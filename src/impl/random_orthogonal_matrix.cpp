@@ -17,6 +17,26 @@
 
 namespace vsag {
 
+bool 
+RandomOrthogonalMatrix::Build() {
+    // generate rom
+    GenerateRandomOrthogonalMatrixWithRetry();
+
+    // validate rom
+    int retries = MAX_RETRIES;
+    bool successful_gen = true;
+    double det = ComputeDeterminant();
+    if (std::fabs(det - 1) > 1e-4) {
+        for (uint64_t i = 0; i < retries; i++) {
+            successful_gen = GenerateRandomOrthogonalMatrix();
+            if (successful_gen) {
+                break;
+            }
+        }
+    }
+    return false;
+}
+
 void
 RandomOrthogonalMatrix::CopyOrthogonalMatrix(float* out_matrix) const {
     std::copy(orthogonal_matrix_.data(), orthogonal_matrix_.data() + dim_ * dim_, out_matrix);

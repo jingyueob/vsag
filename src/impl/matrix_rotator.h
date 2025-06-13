@@ -1,4 +1,3 @@
-
 // Copyright 2024-present the vsag project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,27 +14,29 @@
 
 #pragma once
 
-#include "quantization/quantizer_parameter.h"
+#include "stream_reader.h"
+#include "stream_writer.h"
 
-namespace vsag {
-class RaBitQuantizerParameter : public QuantizerParameter {
+class MatrixRotator
+{
 public:
-    RaBitQuantizerParameter();
+    MatrixRotator() {
+    }
+    virtual ~MatrixRotator() {
+    }
 
-    ~RaBitQuantizerParameter() override = default;
+    virtual void 
+    Transform(const float* original_vec, float* transformed_vec) const = 0;
 
-    void
-    FromJson(const JsonType& json) override;
+    virtual void 
+    InverseTransform(const float* transformed_vec, float* original_vec) const = 0;
 
-    JsonType
-    ToJson() override;
+    virtual bool 
+    Build() = 0;
 
-public:
-    uint64_t pca_dim_{0};
-    uint64_t num_bits_per_dim_query_{32};
-    bool use_fht_{false};
+    virtual void 
+    Serialize(StreamWriter& writer) = 0;
+
+    virtual void 
+    Deserialize(StreamReader& reader) = 0;
 };
-
-using RaBitQuantizerParamPtr = std::shared_ptr<RaBitQuantizerParameter>;
-
-}  // namespace vsag
