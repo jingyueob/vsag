@@ -19,8 +19,8 @@ namespace vsag {
 
 static inline void
 flip_array(const uint8_t* flip, float* data, size_t dim) {  //generic
-    for (size_t i = 0; i < dim; i ++) {
-        bool mask = (flip[i / 8] & (1 << (i%8))) != 0;
+    for (size_t i = 0; i < dim; i++) {
+        bool mask = (flip[i / 8] & (1 << (i % 8))) != 0;
         if (mask) {
             data[i] = -data[i];
         }
@@ -38,7 +38,7 @@ floor_log2(size_t x) {  //smaller or equal
 }
 inline void
 vec_rescale(float* data, size_t dim, float val) {
-    for (int i = 0; i < dim; i++){
+    for (int i = 0; i < dim; i++) {
         data[i] *= val;
     }
 }
@@ -49,7 +49,7 @@ FhtKacRotator::CopyFlip(uint8_t* out_flip) const {
 }
 
 FhtKacRotator::FhtKacRotator(uint64_t dim, Allocator* allocator)
-    : dim_(dim),  allocator_(allocator) {
+    : dim_(dim), allocator_(allocator) {
     flip_offset_ = (dim_ + 7) / kByteLen_;
     flip_.resize(round_ * flip_offset_);
     size_t bottom_log_dim = floor_log2(dim);
@@ -60,8 +60,8 @@ FhtKacRotator::~FhtKacRotator() = default;
 
 bool
 FhtKacRotator::Build() {
-    std::random_device rd;  // Seed
-    std::mt19937 gen(rd()); // Mersenne Twister RNG
+    std::random_device rd;   // Seed
+    std::mt19937 gen(rd());  // Mersenne Twister RNG
     std::uniform_int_distribution<int> dist(0, 255);
     for (auto& i : flip_) {
         i = static_cast<uint8_t>(dist(gen));
@@ -80,7 +80,7 @@ kacs_walk_generic(float* data, size_t len) {
         data[i + offset] = sub;
     }
     if (base != 0) {
-        data[len / 2] *= sqrt(2.0f); 
+        data[len / 2] *= sqrt(2.0f);
         //In odd condition, we operate the prev len/2 items and the post len/2 items, the No.len/2 item stay still,
         //As we need to resize the while sequence in the next step, so we increase the val of No.len/2 item to eliminate the impact of the following resize.
     }

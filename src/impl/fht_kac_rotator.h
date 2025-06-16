@@ -38,22 +38,19 @@ public:
     Serialize(StreamWriter& writer) override;
 
     void
-    Deserialize(StreamReader& reader) override ;
+    Deserialize(StreamReader& reader) override;
 
     bool
     Build() override;
 
     void
-    fht_float_(float *data) const;
+    fht_float_(float* data) const;
 
     void
     calculate() const;
 
     void
     random_flip();
-
-    void
-    swap_data(float* data)const;
 
     void
     CopyFlip(uint8_t* out_flip) const;
@@ -72,4 +69,4 @@ private:
 
     float fac_ = 0;
 };
-} //namespace vsag
+}  //namespace vsag
