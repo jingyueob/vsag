@@ -21,6 +21,7 @@
 #include "matrix_rotator.h"
 #include "stream_reader.h"
 #include "stream_writer.h"
+#include "simd/simd.h"
 
 namespace vsag {
 class FhtKacRotator : public MatrixRotator {
@@ -42,15 +43,6 @@ public:
 
     bool
     Build() override;
-
-    void
-    fht_float_(float* data) const;
-
-    void
-    calculate() const;
-
-    void
-    random_flip();
 
     void
     CopyFlip(uint8_t* out_flip) const;

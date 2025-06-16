@@ -17,16 +17,6 @@
 #include <iostream>
 namespace vsag {
 
-static inline void
-flip_array(const uint8_t* flip, float* data, size_t dim) {  //generic
-    for (size_t i = 0; i < dim; i++) {
-        bool mask = (flip[i / 8] & (1 << (i % 8))) != 0;
-        if (mask) {
-            data[i] = -data[i];
-        }
-    }
-}
-
 inline size_t
 floor_log2(size_t x) {  //smaller or equal
     size_t ret = 0;
@@ -35,12 +25,6 @@ floor_log2(size_t x) {  //smaller or equal
         x >>= 1;
     }
     return ret;
-}
-inline void
-vec_rescale(float* data, size_t dim, float val) {
-    for (int i = 0; i < dim; i++) {
-        data[i] *= val;
-    }
 }
 
 void
@@ -69,134 +53,60 @@ FhtKacRotator::Build() {
     return true;
 }
 
-static void
-kacs_walk_generic(float* data, size_t len) {
-    size_t base = len % 2;
-    size_t offset = base + (len / 2);  // for odd dim
-    for (size_t i = 0; i < len / 2; i++) {
-        float add = data[i] + data[i + offset];
-        float sub = data[i] - data[i + offset];
-        data[i] = add;
-        data[i + offset] = sub;
-    }
-    if (base != 0) {
-        data[len / 2] *= std::sqrt(2.0F);
-        //In odd condition, we operate the prev len/2 items and the post len/2 items, the No.len/2 item stay still,
-        //As we need to resize the while sequence in the next step, so we increase the val of No.len/2 item to eliminate the impact of the following resize.
-    }
-}
-
-void
-FhtKacRotator::fht_float_(float* data) const {
-    size_t n = trunc_dim_;
-    size_t step = 1;
-    while (step < n) {
-        for (size_t i = 0; i < n; i += step * 2) {
-            for (int j = 0; j < step; j++) {
-                float even = data[i + j];
-                float odd = data[i + j + step];
-                data[i + j] = even + odd;
-                data[i + j + step] = even - odd;
-            }
-        }
-        step *= 2;
-    }
-}
-
 void
 FhtKacRotator::Transform(const float* data, float* rotated_vec) const {
     std::memcpy(rotated_vec, data, sizeof(float) * dim_);
-    std::fill(rotated_vec + dim_, rotated_vec + dim_, 0);
     if (trunc_dim_ == dim_) {
-        flip_array(flip_.data() + 0 * flip_offset_, rotated_vec, dim_);
-        fht_float_(rotated_vec);
-        vec_rescale(rotated_vec, trunc_dim_, fac_);
-
-        flip_array(flip_.data() + 1 * flip_offset_, rotated_vec, dim_);
-        fht_float_(rotated_vec);
-        vec_rescale(rotated_vec, trunc_dim_, fac_);
-
-        flip_array(flip_.data() + 2 * flip_offset_, rotated_vec, dim_);
-        fht_float_(rotated_vec);
-        vec_rescale(rotated_vec, trunc_dim_, fac_);
-
-        flip_array(flip_.data() + 3 * flip_offset_, rotated_vec, dim_);
-        fht_float_(rotated_vec);
-        vec_rescale(rotated_vec, trunc_dim_, fac_);
-
+        for(int flip_time = 0; flip_time < round_; flip_time++){
+            FlipSign(flip_.data() + flip_time * flip_offset_, rotated_vec, dim_);
+            FHTRotate(rotated_vec, trunc_dim_);
+            VecRescale(rotated_vec, trunc_dim_, fac_);
+        }
         return;
     }
 
     size_t start = dim_ - trunc_dim_;
 
-    flip_array(flip_.data() + 0 * flip_offset_, rotated_vec, dim_);
-    fht_float_(rotated_vec);
-    vec_rescale(rotated_vec, trunc_dim_, fac_);
-    kacs_walk_generic(rotated_vec, dim_);
+    for(int flip_time = 0; flip_time < round_; flip_time += 2){
+        FlipSign(flip_.data() + flip_time * flip_offset_, rotated_vec, dim_);
+        FHTRotate(rotated_vec, trunc_dim_);
+        VecRescale(rotated_vec, trunc_dim_, fac_);
+        KacsWalk(rotated_vec, dim_);
 
-    flip_array(flip_.data() + flip_offset_, rotated_vec, dim_);
-    fht_float_(rotated_vec + start);
-    vec_rescale(rotated_vec + start, trunc_dim_, fac_);
-    kacs_walk_generic(rotated_vec, dim_);
-
-    flip_array(flip_.data() + 2 * flip_offset_, rotated_vec, dim_);
-    fht_float_(rotated_vec);
-    vec_rescale(rotated_vec, trunc_dim_, fac_);
-    kacs_walk_generic(rotated_vec, dim_);
-
-    flip_array(flip_.data() + 3 * flip_offset_, rotated_vec, dim_);
-    fht_float_(rotated_vec + start);
-    vec_rescale(rotated_vec + start, trunc_dim_, fac_);
-    kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, 0.25F);
-    //origin vec(x,y), after kacs_walk_generic() -> (x+y, x-y),should be resize by sqrt(0.5) each time to make the len of vector consistency
+        FlipSign(flip_.data() + (flip_time + 1) * flip_offset_, rotated_vec, dim_);
+        FHTRotate(rotated_vec + start, trunc_dim_);
+        VecRescale(rotated_vec + start, trunc_dim_, fac_);
+        KacsWalk(rotated_vec, dim_);
+    }
+    VecRescale(rotated_vec, dim_, 0.25F);
+    //origin vec(x,y), after kacs_walk_generic() -> (x+y, x-y),should be resize by sqrt(0.5) for each KacsWalk() to make the len of vector consistent
 }
 void
 FhtKacRotator::InverseTransform(float const* data, float* rotated_vec) const {
     std::memcpy(rotated_vec, data, sizeof(float) * dim_);
-    std::fill(rotated_vec + dim_, rotated_vec + dim_, 0);
     if (trunc_dim_ == dim_) {
-        fht_float_(rotated_vec);
-        vec_rescale(rotated_vec, trunc_dim_, fac_);
-        flip_array(flip_.data() + 3 * flip_offset_, rotated_vec, dim_);
-
-        fht_float_(rotated_vec);
-        vec_rescale(rotated_vec, trunc_dim_, fac_);
-        flip_array(flip_.data() + 2 * flip_offset_, rotated_vec, dim_);
-
-        fht_float_(rotated_vec);
-        vec_rescale(rotated_vec, trunc_dim_, fac_);
-        flip_array(flip_.data() + 1 * flip_offset_, rotated_vec, dim_);
-
-        fht_float_(rotated_vec);
-        vec_rescale(rotated_vec, trunc_dim_, fac_);
-        flip_array(flip_.data() + 0 * flip_offset_, rotated_vec, dim_);
-
+        for(int flip_time = round_ - 1; flip_time >= 0; flip_time--){
+            FHTRotate(rotated_vec, trunc_dim_);
+            VecRescale(rotated_vec, trunc_dim_, fac_);
+            FlipSign(flip_.data() + flip_time * flip_offset_, rotated_vec, dim_);
+        }
         return;
     }
 
     size_t start = dim_ - trunc_dim_;
 
-    vec_rescale(rotated_vec, dim_, 0.25F);
-    kacs_walk_generic(rotated_vec, dim_);
-    fht_float_(rotated_vec + start);
-    vec_rescale(rotated_vec + start, trunc_dim_, fac_);
-    flip_array(flip_.data() + 3 * flip_offset_, rotated_vec, dim_);
+    VecRescale(rotated_vec, dim_, 0.25F);
+    for(int flip_time = round_ - 1; flip_time > 0; flip_time -= 2){
+        KacsWalk(rotated_vec, dim_);
+        FHTRotate(rotated_vec + start, trunc_dim_);
+        VecRescale(rotated_vec + start, trunc_dim_, fac_);
+        FlipSign(flip_.data() + flip_time * flip_offset_, rotated_vec, dim_);
 
-    kacs_walk_generic(rotated_vec, dim_);
-    fht_float_(rotated_vec);
-    vec_rescale(rotated_vec, trunc_dim_, fac_);
-    flip_array(flip_.data() + 2 * flip_offset_, rotated_vec, dim_);
-
-    kacs_walk_generic(rotated_vec, dim_);
-    fht_float_(rotated_vec + start);
-    vec_rescale(rotated_vec + start, trunc_dim_, fac_);
-    flip_array(flip_.data() + 1 * flip_offset_, rotated_vec, dim_);
-
-    kacs_walk_generic(rotated_vec, dim_);
-    fht_float_(rotated_vec);
-    vec_rescale(rotated_vec, trunc_dim_, fac_);
-    flip_array(flip_.data() + 0 * flip_offset_, rotated_vec, dim_);
+        KacsWalk(rotated_vec, dim_);
+        FHTRotate(rotated_vec, trunc_dim_);
+        VecRescale(rotated_vec, trunc_dim_, fac_);
+        FlipSign(flip_.data() + (flip_time - 1) * flip_offset_, rotated_vec, dim_);
+    }
 }
 
 void
