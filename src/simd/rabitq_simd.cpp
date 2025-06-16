@@ -59,17 +59,17 @@ GetFHTRotate() {
 }
 
 static KacsWalkType
-GetKacsWalk(){
+GetKacsWalk() {
     return generic::KacsWalk;
 }
 
 static VecRescaleType
-GetVecRescale(){
+GetVecRescale() {
     return generic::VecRescale;
 }
 
 static FlipSignType
-GetFlipSign(){
+GetFlipSign() {
     return generic::FlipSign;
 }
 RaBitQFloatBinaryType RaBitQFloatBinaryIP = GetRaBitQFloatBinaryIP();

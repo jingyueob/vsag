@@ -57,7 +57,7 @@ void
 FhtKacRotator::Transform(const float* data, float* rotated_vec) const {
     std::memcpy(rotated_vec, data, sizeof(float) * dim_);
     if (trunc_dim_ == dim_) {
-        for(int flip_time = 0; flip_time < round_; flip_time++){
+        for (size_t flip_time = 0; flip_time < round_; flip_time++) {
             FlipSign(flip_.data() + flip_time * flip_offset_, rotated_vec, dim_);
             FHTRotate(rotated_vec, trunc_dim_);
             VecRescale(rotated_vec, trunc_dim_, fac_);
@@ -67,7 +67,7 @@ FhtKacRotator::Transform(const float* data, float* rotated_vec) const {
 
     size_t start = dim_ - trunc_dim_;
 
-    for(int flip_time = 0; flip_time < round_; flip_time += 2){
+    for (size_t flip_time = 0; flip_time < round_; flip_time += 2) {
         FlipSign(flip_.data() + flip_time * flip_offset_, rotated_vec, dim_);
         FHTRotate(rotated_vec, trunc_dim_);
         VecRescale(rotated_vec, trunc_dim_, fac_);
@@ -85,7 +85,7 @@ void
 FhtKacRotator::InverseTransform(float const* data, float* rotated_vec) const {
     std::memcpy(rotated_vec, data, sizeof(float) * dim_);
     if (trunc_dim_ == dim_) {
-        for(int flip_time = round_ - 1; flip_time >= 0; flip_time--){
+        for (size_t flip_time = round_ - 1; flip_time >= 0; flip_time--) {
             FHTRotate(rotated_vec, trunc_dim_);
             VecRescale(rotated_vec, trunc_dim_, fac_);
             FlipSign(flip_.data() + flip_time * flip_offset_, rotated_vec, dim_);
@@ -96,7 +96,7 @@ FhtKacRotator::InverseTransform(float const* data, float* rotated_vec) const {
     size_t start = dim_ - trunc_dim_;
 
     VecRescale(rotated_vec, dim_, 0.25F);
-    for(int flip_time = round_ - 1; flip_time > 0; flip_time -= 2){
+    for (size_t flip_time = round_ - 1; flip_time > 0; flip_time -= 2) {
         KacsWalk(rotated_vec, dim_);
         FHTRotate(rotated_vec + start, trunc_dim_);
         VecRescale(rotated_vec + start, trunc_dim_, fac_);

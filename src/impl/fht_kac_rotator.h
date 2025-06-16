@@ -19,9 +19,9 @@
 
 #include "../logger.h"
 #include "matrix_rotator.h"
+#include "simd/simd.h"
 #include "stream_reader.h"
 #include "stream_writer.h"
-#include "simd/simd.h"
 
 namespace vsag {
 class FhtKacRotator : public MatrixRotator {

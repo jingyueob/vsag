@@ -91,9 +91,9 @@ using FHTRotateType = void (*)(float* data, size_t dim_);
 
 using KacsWalkType = void (*)(float* data, size_t len);
 
-using  VecRescaleType = void (*)(float* data, size_t dim, float val);
+using VecRescaleType = void (*)(float* data, size_t dim, float val);
 
-using  FlipSignType = void (*)(const uint8_t* flip, float* data, size_t dim);
+using FlipSignType = void (*)(const uint8_t* flip, float* data, size_t dim);
 extern RaBitQFloatBinaryType RaBitQFloatBinaryIP;
 extern RaBitQSQ4UBinaryType RaBitQSQ4UBinaryIP;
 extern FHTRotateType FHTRotate;
