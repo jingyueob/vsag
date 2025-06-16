@@ -14,14 +14,13 @@
 
 #include <stdint.h>
 
-#include <random>
 #include <cstring>
+#include <random>
 
 #include "../logger.h"
 #include "matrix_rotator.h"
 #include "stream_reader.h"
 #include "stream_writer.h"
-
 
 namespace vsag {
 class FhtKacRotator : public MatrixRotator {
@@ -29,38 +28,38 @@ public:
     FhtKacRotator(uint64_t dim, Allocator* allocator);
     virtual ~FhtKacRotator();
 
-    void 
+    void
     Transform(const float* data, float* rotated_vec) const override;
 
-    void 
+    void
     InverseTransform(const float* data, float* rotated_vec) const override;
 
-    void 
+    void
     Serialize(StreamWriter& writer) override;
 
-    void 
+    void
     Deserialize(StreamReader& reader) override ;
 
     bool
     Build() override;
 
-    void 
+    void
     fht_float_(float *data) const;
-    void 
+
+    void
     calculate() const;
 
-    void 
+    void
     random_flip();
 
-    void 
+    void
     swap_data(float* data)const;
 
-    void 
+    void
     CopyFlip(uint8_t* out_flip) const;
 
     const size_t kByteLen_ = 8;
     const size_t round_ = 4;
-
 
 private:
     const uint64_t dim_{0};

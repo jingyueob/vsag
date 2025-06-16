@@ -1,3 +1,4 @@
+
 // Copyright 2024-present the vsag project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,30 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#include "extrainfo_wrapper_filter.h"
 
-#include "stream_reader.h"
-#include "stream_writer.h"
+namespace vsag {
 
-class MatrixRotator {
-public:
-    MatrixRotator() {
+bool
+ExtraInfoWrapperFilter::CheckValid(int64_t id) const {
+    bool need_release = false;
+    const char* extra_info = extra_infos_->GetExtraInfoById(id, need_release);
+    bool valid = filter_impl_->CheckValid(extra_info);
+    if (need_release) {
+        extra_infos_->Release(extra_info);
     }
-    virtual ~MatrixRotator() {
-    }
-
-    virtual void
-    Transform(const float* original_vec, float* transformed_vec) const = 0;
-
-    virtual void
-    InverseTransform(const float* transformed_vec, float* original_vec) const = 0;
-
-    virtual bool
-    Build() = 0;
-
-    virtual void
-    Serialize(StreamWriter& writer) = 0;
-
-    virtual void
-    Deserialize(StreamReader& reader) = 0;
-};
+    return valid;
+}
+}  // namespace vsag

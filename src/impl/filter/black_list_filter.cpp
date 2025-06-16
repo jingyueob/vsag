@@ -1,3 +1,4 @@
+
 // Copyright 2024-present the vsag project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,30 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#include "black_list_filter.h"
 
-#include "stream_reader.h"
-#include "stream_writer.h"
+#include "common.h"
 
-class MatrixRotator {
-public:
-    MatrixRotator() {
+namespace vsag {
+
+bool
+BlackListFilter::CheckValid(int64_t id) const {
+    if (is_bitset_filter_) {
+        int64_t bit_index = id & ROW_ID_MASK;
+        return not bitset_->Test(bit_index);
     }
-    virtual ~MatrixRotator() {
-    }
-
-    virtual void
-    Transform(const float* original_vec, float* transformed_vec) const = 0;
-
-    virtual void
-    InverseTransform(const float* transformed_vec, float* original_vec) const = 0;
-
-    virtual bool
-    Build() = 0;
-
-    virtual void
-    Serialize(StreamWriter& writer) = 0;
-
-    virtual void
-    Deserialize(StreamReader& reader) = 0;
-};
+    return not fallback_func_(id);
+}
+}  // namespace vsag

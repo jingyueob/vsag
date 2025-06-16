@@ -1,3 +1,4 @@
+
 // Copyright 2024-present the vsag project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,28 +15,27 @@
 
 #pragma once
 
-#include "stream_reader.h"
-#include "stream_writer.h"
+#include <functional>
 
-class MatrixRotator {
+#include "typing.h"
+#include "vsag/bitset.h"
+#include "vsag/filter.h"
+
+namespace vsag {
+
+class WhiteListFilter : public Filter {
 public:
-    MatrixRotator() {
-    }
-    virtual ~MatrixRotator() {
-    }
+    explicit WhiteListFilter(const IdFilterFuncType& fallback_func)
+        : fallback_func_(fallback_func), is_bitset_filter_(false), bitset_(nullptr){};
 
-    virtual void
-    Transform(const float* original_vec, float* transformed_vec) const = 0;
+    explicit WhiteListFilter(const BitsetPtr& bitset) : bitset_(bitset), is_bitset_filter_(true){};
 
-    virtual void
-    InverseTransform(const float* transformed_vec, float* original_vec) const = 0;
+    bool
+    CheckValid(int64_t id) const override;
 
-    virtual bool
-    Build() = 0;
-
-    virtual void
-    Serialize(StreamWriter& writer) = 0;
-
-    virtual void
-    Deserialize(StreamReader& reader) = 0;
+private:
+    IdFilterFuncType fallback_func_{nullptr};
+    const BitsetPtr bitset_;
+    const bool is_bitset_filter_;
 };
+}  // namespace vsag

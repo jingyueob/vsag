@@ -17,6 +17,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
+
 #include "fixtures.h"
 #include "safe_allocator.h"
 

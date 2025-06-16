@@ -1,3 +1,4 @@
+
 // Copyright 2024-present the vsag project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,28 +15,7 @@
 
 #pragma once
 
-#include "stream_reader.h"
-#include "stream_writer.h"
-
-class MatrixRotator {
-public:
-    MatrixRotator() {
-    }
-    virtual ~MatrixRotator() {
-    }
-
-    virtual void
-    Transform(const float* original_vec, float* transformed_vec) const = 0;
-
-    virtual void
-    InverseTransform(const float* transformed_vec, float* original_vec) const = 0;
-
-    virtual bool
-    Build() = 0;
-
-    virtual void
-    Serialize(StreamWriter& writer) = 0;
-
-    virtual void
-    Deserialize(StreamReader& reader) = 0;
-};
+#include "black_list_filter.h"
+#include "extrainfo_wrapper_filter.h"
+#include "inner_id_wrapper_filter.h"
+#include "white_list_filter.h"

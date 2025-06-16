@@ -17,6 +17,7 @@
 
 #include <cblas.h>
 #include <lapacke.h>
+
 #include <random>
 
 #include "../logger.h"
@@ -47,7 +48,7 @@ public:
     CopyOrthogonalMatrix(float* out_matrix) const;
 
     void
-    Transform(const float* original_vec, float* transformed_vec) const override; 
+    Transform(const float* original_vec, float* transformed_vec) const override;
 
     void
     InverseTransform(const float* transformed_vec, float* original_vec) const override;

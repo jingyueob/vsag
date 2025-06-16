@@ -17,7 +17,7 @@
 
 namespace vsag {
 
-bool 
+bool
 RandomOrthogonalMatrix::Build() {
     // generate rom
     GenerateRandomOrthogonalMatrixWithRetry();
