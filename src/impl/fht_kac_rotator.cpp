@@ -133,26 +133,23 @@ FhtKacRotator::Transform(const float* data, float* rotated_vec) const {
     fht_float_(rotated_vec);
     vec_rescale(rotated_vec, trunc_dim_, fac_);
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, sqrt(0.5f));
-    //origin vec(x,y), after kacs_walk_generic() -> (x+y, x-y),should be resize by sqrt(0.5) to make the len of vector consistency
 
     flip_array(flip_.data() + flip_offset_, rotated_vec, dim_);
     fht_float_(rotated_vec + start);
     vec_rescale(rotated_vec + start, trunc_dim_, fac_);
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, sqrt(0.5f));
 
     flip_array(flip_.data() + 2 * flip_offset_, rotated_vec, dim_);
     fht_float_(rotated_vec);
     vec_rescale(rotated_vec, trunc_dim_, fac_);
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, sqrt(0.5f));
 
     flip_array(flip_.data() + 3 * flip_offset_, rotated_vec, dim_);
     fht_float_(rotated_vec + start);
     vec_rescale(rotated_vec + start, trunc_dim_, fac_);
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, sqrt(0.5f));
+    vec_rescale(rotated_vec, dim_, 0.25);
+    //origin vec(x,y), after kacs_walk_generic() -> (x+y, x-y),should be resize by sqrt(0.5) to make the len of vector consistency
 }
 void
 FhtKacRotator::InverseTransform(float const* data, float* rotated_vec) const {
@@ -180,26 +177,23 @@ FhtKacRotator::InverseTransform(float const* data, float* rotated_vec) const {
 
     size_t start = dim_ - trunc_dim_;
 
+    vec_rescale(rotated_vec, dim_, 0.25);
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, sqrt(0.5f));
     fht_float_(rotated_vec + start);
     vec_rescale(rotated_vec + start, trunc_dim_, fac_);
     flip_array(flip_.data() + 3 * flip_offset_, rotated_vec, dim_);
 
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, sqrt(0.5f));
     fht_float_(rotated_vec);
     vec_rescale(rotated_vec, trunc_dim_, fac_);
     flip_array(flip_.data() + 2 * flip_offset_, rotated_vec, dim_);
 
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, sqrt(0.5f));
     fht_float_(rotated_vec + start);
     vec_rescale(rotated_vec + start, trunc_dim_, fac_);
     flip_array(flip_.data() + 1 * flip_offset_, rotated_vec, dim_);
 
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, sqrt(0.5f));
     fht_float_(rotated_vec);
     vec_rescale(rotated_vec, trunc_dim_, fac_);
     flip_array(flip_.data() + 0 * flip_offset_, rotated_vec, dim_);
