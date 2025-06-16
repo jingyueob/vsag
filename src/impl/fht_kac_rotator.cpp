@@ -80,7 +80,7 @@ kacs_walk_generic(float* data, size_t len) {
         data[i + offset] = sub;
     }
     if (base != 0) {
-        data[len / 2] *= sqrt(2.0f);
+        data[len / 2] *= std::sqrt(2.0F);
         //In odd condition, we operate the prev len/2 items and the post len/2 items, the No.len/2 item stay still,
         //As we need to resize the while sequence in the next step, so we increase the val of No.len/2 item to eliminate the impact of the following resize.
     }
@@ -148,8 +148,8 @@ FhtKacRotator::Transform(const float* data, float* rotated_vec) const {
     fht_float_(rotated_vec + start);
     vec_rescale(rotated_vec + start, trunc_dim_, fac_);
     kacs_walk_generic(rotated_vec, dim_);
-    vec_rescale(rotated_vec, dim_, 0.25);
-    //origin vec(x,y), after kacs_walk_generic() -> (x+y, x-y),should be resize by sqrt(0.5) to make the len of vector consistency
+    vec_rescale(rotated_vec, dim_, 0.25F);
+    //origin vec(x,y), after kacs_walk_generic() -> (x+y, x-y),should be resize by sqrt(0.5) each time to make the len of vector consistency
 }
 void
 FhtKacRotator::InverseTransform(float const* data, float* rotated_vec) const {
@@ -177,7 +177,7 @@ FhtKacRotator::InverseTransform(float const* data, float* rotated_vec) const {
 
     size_t start = dim_ - trunc_dim_;
 
-    vec_rescale(rotated_vec, dim_, 0.25);
+    vec_rescale(rotated_vec, dim_, 0.25F);
     kacs_walk_generic(rotated_vec, dim_);
     fht_float_(rotated_vec + start);
     vec_rescale(rotated_vec + start, trunc_dim_, fac_);
