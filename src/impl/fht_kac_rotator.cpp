@@ -71,7 +71,6 @@ FhtKacRotator::Build()
 
 static void 
 kacs_walk_generic(float* data, size_t len) {
-    // ! len % 32 == 0;
     size_t base = len % 2;
     size_t offset = base + (len / 2); // for odd dim
     for (size_t i = 0; i < len / 2; i ++) {

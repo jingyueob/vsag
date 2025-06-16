@@ -34,7 +34,7 @@ RandomOrthogonalMatrix::Build() {
             }
         }
     }
-    return false;
+    return successful_gen;
 }
 
 void
