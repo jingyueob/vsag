@@ -41,8 +41,7 @@ public:
         orthogonal_matrix_.resize(dim * dim);
     }
 
-    virtual ~RandomOrthogonalMatrix() {
-    }
+    virtual ~RandomOrthogonalMatrix() = default;
 
     void
     CopyOrthogonalMatrix(float* out_matrix) const;

@@ -25,8 +25,9 @@ RandomOrthogonalMatrix::Build() {
     // validate rom
     int retries = MAX_RETRIES;
     bool successful_gen = true;
+    const float delta = 1e-4;
     double det = ComputeDeterminant();
-    if (std::fabs(det - 1) > 1e-4) {
+    if (std::fabs(det - 1) > delta) {
         for (uint64_t i = 0; i < retries; i++) {
             successful_gen = GenerateRandomOrthogonalMatrix();
             if (successful_gen) {

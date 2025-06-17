@@ -1,3 +1,4 @@
+
 // Copyright 2024-present the vsag project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +20,8 @@
 
 class MatrixRotator {
 public:
-    MatrixRotator() {
-    }
-    virtual ~MatrixRotator() {
-    }
+    MatrixRotator() = default;
+    virtual ~MatrixRotator() = default;
 
     virtual void
     Transform(const float* original_vec, float* transformed_vec) const = 0;

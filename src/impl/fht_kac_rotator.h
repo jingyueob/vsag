@@ -1,3 +1,4 @@
+
 // Copyright 2024-present the vsag project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +28,8 @@ namespace vsag {
 class FhtKacRotator : public MatrixRotator {
 public:
     FhtKacRotator(uint64_t dim, Allocator* allocator);
-    virtual ~FhtKacRotator();
+    
+    ~FhtKacRotator() = default;
 
     void
     Transform(const float* data, float* rotated_vec) const override;
@@ -48,7 +50,7 @@ public:
     CopyFlip(uint8_t* out_flip) const;
 
     const size_t kByteLen_ = 8;
-    const size_t round_ = 4;
+    const int round_ = 4;
 
 private:
     const uint64_t dim_{0};
