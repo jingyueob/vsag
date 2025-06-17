@@ -28,7 +28,7 @@ namespace vsag {
 class FhtKacRotator : public MatrixRotator {
 public:
     FhtKacRotator(uint64_t dim, Allocator* allocator);
-    
+
     ~FhtKacRotator() = default;
 
     void
