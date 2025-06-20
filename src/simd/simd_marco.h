@@ -13,19 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "label_table.h"
+#pragma once
 
-namespace vsag {
-
-void
-LabelTable::MergeOther(const LabelTablePtr& other, const IdMapFunction& id_map) {
-    auto other_size = other->GetTotalCount();
-    this->label_table_.resize(total_count_ + other_size);
-    for (int64_t i = 0; i < other_size; ++i) {
-        auto new_label = std::get<1>(id_map(other->label_table_[i]));
-        this->label_table_[i + total_count_] = new_label;
-        this->label_remap_[new_label] = i + total_count_;
-    }
-    total_count_ += other_size;
-}
-}  // namespace vsag
+#if defined(__cplusplus)
+#if defined(__GNUC__) || defined(__clang__)
+#define RESTRICT __restrict__
+#else
+#define RESTRICT
+#endif
+#else
+#define RESTRICT restrict
+#endif
