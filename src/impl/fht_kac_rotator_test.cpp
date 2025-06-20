@@ -34,12 +34,10 @@ TestRandomness(FhtKacRotator& rom1, FhtKacRotator& rom2, int dim) {
 
     uint64_t count_same = 0, count_non_zero = 0;
     for (uint64_t i = 0; i < flip_len; i++) {
-        if (not(std::abs(mat1[i]) < 1e-3 and std::abs(mat2[i]) < 1e-3)) {
-            if (std::abs(mat1[i] - mat2[i]) < 1e-3) {
-                count_same++;
-            }
-            count_non_zero++;
+        if (mat1[i] == mat2[i]){
+            count_same++;
         }
+        count_non_zero++;
     }
 
     REQUIRE(count_same <= (uint64_t)(0.1 * count_non_zero));
