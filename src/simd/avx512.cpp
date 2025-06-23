@@ -1066,9 +1066,8 @@ KacsWalk(float* data, size_t len) {
 #if defined(ENABLE_AVX512)
     int base = len % 2;
     int offset = base + (len / 2);
-    size_t i = 0;
-    float mid_item = data[len / 2];
-    for (; i < len / 2; i += 16) {
+    int i = 0;
+    for (; i + 16 < len / 2; i += 16) {
         __m512 x = _mm512_loadu_ps(&data[i]);
         __m512 y = _mm512_loadu_ps(&data[i + offset]);
 
@@ -1085,7 +1084,6 @@ KacsWalk(float* data, size_t len) {
         data[i + offset] = x - y; 
     }
     if(base != 0){
-        data[len / 2] = mid_item;
         data[len / 2] *= std::sqrt(2);
     }
 #else

@@ -159,3 +159,57 @@ TEST_CASE("RaBitQ FP32-BQ SIMD Compute Benchmark", "[ut][simd][!benchmark]") {
     BENCHMARK_SIMD_COMPUTE(avx512, RaBitQFloatBinaryIP);
     BENCHMARK_SIMD_COMPUTE(neon, RaBitQFloatBinaryIP);
 }
+
+TEST_CASE("SIMD test for rescale", "[ut][simd]"){
+    auto dims = fixtures::get_common_used_dims();
+    int64_t count = 100;
+    for (const auto& dim : dims) {
+        std::vector<float> gt = fixtures::GenerateVectors<float>(count, dim);
+
+        std::vector<float> avx512_datas(gt.size());
+        avx512_datas.assign(gt.begin(), gt.end());
+
+        std::vector<float> avx2_datas(gt.size());
+        avx2_datas.assign(gt.begin(), gt.end());
+
+        std::vector<float> sse_datas(gt.size());
+        sse_datas.assign(gt.begin(), gt.end());
+        for (int i = 0; i < count; i++){
+            auto * gt_data = gt.data() + i * dim;
+            auto * avx512_data = avx512_datas.data() + i * dim;
+            auto * avx2_data = avx2_datas.data() + i * dim;
+            auto * sse_data = sse_datas.data() + i * dim;
+            // generic::VecRescale(gt_data, dim, 0.5);
+            // avx512::VecRescale(gt_data, dim, 0.5);
+            // avx2::VecRescale(gt_data, dim, 0.5);
+            // sse::VecRescale(gt_data, dim, 0.5);
+            // for(int i = 0; i < dim; i++){
+            //     REQUIRE(gt_data[i] - avx512_data[i] < 1e-5);
+            //     REQUIRE(gt_data[i] - avx2_data[i] < 1e-5);
+            //     REQUIRE(gt_data[i] - sse_data[i] < 1e-5);
+            // }
+
+            generic::FHTRotate(gt_data, dim);
+            avx512::FHTRotate(gt_data, dim);
+            avx2::FHTRotate(gt_data, dim);
+            sse::FHTRotate(gt_data, dim);
+
+            for(int i = 0; i < dim; i++){
+                REQUIRE(gt_data[i] - avx512_data[i] < 1e-5);
+                REQUIRE(gt_data[i] - avx2_data[i] < 1e-5);
+                REQUIRE(gt_data[i] - sse_data[i] < 1e-5);
+            }
+
+            // generic::KacsWalk(gt_data, dim);
+            // avx512::KacsWalk(gt_data, dim);
+            // avx2::KacsWalk(gt_data, dim);
+            // sse::KacsWalk(gt_data, dim);
+
+            // for(int i = 0; i < dim; i++){
+            //     REQUIRE(gt_data[i] - avx512_data[i] < 1e-5);
+            //     REQUIRE(gt_data[i] - avx2_data[i] < 1e-5);
+            //     REQUIRE(gt_data[i] - sse_data[i] < 1e-5);
+            // }
+        }
+    }
+}

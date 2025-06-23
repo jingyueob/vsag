@@ -942,7 +942,7 @@ VecRescale(float* data, size_t dim, float val) {
 #if defined(ENABLE_SSE)
     int i = 0;
     __m128 val_vec = _mm_set1_ps(val);
-    for(; i < dim; i+= 4){
+    for(; i + 4 < dim; i+= 4){
         __m128 data_vec = _mm_loadu_ps(&data[i]);
         __m128 result_vec = _mm_mul_ps(data_vec, val_vec);
         _mm_storeu_ps(&data[i], result_vec);
@@ -960,8 +960,8 @@ KacsWalk(float* data, size_t len) {
 #if defined(ENABLE_SSE)
     size_t base = len % 2;
     size_t offset = base + (len / 2);  // for odd dim
-    size_t i = 0;
-    for(; i < len / 2; i += 4){
+    int i = 0;
+    for(; i + 4 < len / 2; i += 4){
         __m128 x = _mm_loadu_ps(&data[i]);
         __m128 y = _mm_loadu_ps(&data[i + offset]);
         _mm_storeu_ps(&data[i],_mm_add_ps(x, y));

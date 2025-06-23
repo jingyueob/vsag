@@ -59,17 +59,33 @@ GetFHTRotate() {
 #if defined(ENABLE_AVX512)
         return avx512::FHTRotate;
 #endif
+    }else if (SimdStatus::SupportAVX2()){
+#if defined(ENABLE_AVX2)
+        return avx2::FHTRotate;
+#endif        
+    }else if (SimdStatus::SupportSSE()){
+#if defined(ENABLE_SSE)
+        return sse::FHTRotate;
+#endif
     }
     return generic::FHTRotate;
 }
 
 static KacsWalkType
 GetKacsWalk() {
-//     if (SimdStatus::SupportAVX512()) {
-// #if defined(ENABLE_AVX512)
-//         return avx512::KacsWalk;
-// #endif
-//     }
+    if (SimdStatus::SupportAVX512()) {
+#if defined(ENABLE_AVX512)
+        return avx512::KacsWalk;
+#endif
+    }else if (SimdStatus::SupportAVX2()){
+#if defined(ENABLE_AVX2)
+        return avx2::KacsWalk;
+#endif
+    }else if (SimdStatus::SupportSSE()){
+#if defined(ENABLE_SSE)
+        return sse::KacsWalk;
+#endif
+    }
     return generic::KacsWalk;
 }
 
@@ -79,17 +95,25 @@ GetVecRescale() {
 #if defined(ENABLE_AVX512)
     return avx512::VecRescale;
 #endif
+    }else if (SimdStatus::SupportAVX2()){
+#if defined(ENABLE_AVX2)
+    return avx2::VecRescale;
+#endif
+    }else if (SimdStatus::SupportSSE()){
+#if defined(ENABLE_SSE)
+    return sse::VecRescale;
+#endif      
     }
     return generic::VecRescale;
 }
 
 static FlipSignType
 GetFlipSign() {
-//     if (SimdStatus::SupportAVX512()) {
-// #if defined(ENABLE_AVX512)
-//         return avx512::FlipSign;
-// #endif
-//     }
+    if (SimdStatus::SupportAVX512()) {
+#if defined(ENABLE_AVX512)
+        return avx512::FlipSign;
+#endif
+    }
     return generic::FlipSign;
 }
 
@@ -98,6 +122,14 @@ GetRotateOp() {
     if (SimdStatus::SupportAVX512()) {
 #if defined(ENABLE_AVX512)
         return avx512::RotateOp;
+#endif
+    }else if (SimdStatus::SupportAVX2()){
+#if defined(ENABLE_AVX2)
+        return avx2::RotateOp;
+#endif
+    }else if (SimdStatus::SupportSSE()){
+#if defined(ENABLE_SSE)
+        return sse::RotateOp;
 #endif
     }
     return generic::RotateOp;
