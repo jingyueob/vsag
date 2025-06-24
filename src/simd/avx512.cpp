@@ -1095,8 +1095,8 @@ void
 FlipSign(const uint8_t* flip, float* data, size_t dim) {
 #if defined(ENABLE_AVX512)
     constexpr size_t kFloatsPerChunk = 64;
-
-    for (size_t i = 0; i < dim; i += kFloatsPerChunk) {
+    size_t i = 0;
+    for (; i + 64 < dim; i += kFloatsPerChunk) {
         // Load 64 bits (8 bytes) from the bit sequence
         uint64_t mask_bits;
         std::memcpy(&mask_bits, &flip[i / 8], sizeof(mask_bits));
@@ -1126,6 +1126,12 @@ FlipSign(const uint8_t* flip, float* data, size_t dim) {
         __m512 vec3 = _mm512_loadu_ps(&data[i + 48]);
         vec3 = _mm512_mask_xor_ps(vec3, mask3, vec3, sign_flip);
         _mm512_storeu_ps(&data[i + 48], vec3);
+    }
+    for(; i < dim; i++){
+        bool mask = (flip[i / 8] & (1 << (i % 8))) != 0;
+        if (mask) {
+            data[i] = -data[i];
+        }
     }
 #else
     return generic::FlipSign(flip, data, dim);

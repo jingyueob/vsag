@@ -62,11 +62,11 @@ GetFHTRotate() {
     }else if (SimdStatus::SupportAVX2()){
 #if defined(ENABLE_AVX2)
         return avx2::FHTRotate;
-#endif        
+#endif
     }else if (SimdStatus::SupportAVX()){
 #if defined(ENABLE_AVX)
         return avx::FHTRotate;
-#endif
+#endif        
     }else if (SimdStatus::SupportSSE()){
 #if defined(ENABLE_SSE)
         return sse::FHTRotate;
@@ -74,6 +74,7 @@ GetFHTRotate() {
     }
     return generic::FHTRotate;
 }
+
 static KacsWalkType
 GetKacsWalk() {
     if (SimdStatus::SupportAVX512()) {
@@ -113,7 +114,7 @@ GetVecRescale() {
     }else if (SimdStatus::SupportSSE()){
 #if defined(ENABLE_SSE)
     return sse::VecRescale;
-#endif
+#endif      
     }
     return generic::VecRescale;
 }
