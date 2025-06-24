@@ -168,48 +168,163 @@ TEST_CASE("SIMD test for rescale", "[ut][simd]"){
 
         std::vector<float> avx512_datas(gt.size());
         avx512_datas.assign(gt.begin(), gt.end());
-
         std::vector<float> avx2_datas(gt.size());
         avx2_datas.assign(gt.begin(), gt.end());
-
+        std::vector<float> avx_datas(gt.size());
+        avx_datas.assign(gt.begin(), gt.end());
         std::vector<float> sse_datas(gt.size());
         sse_datas.assign(gt.begin(), gt.end());
         for (int i = 0; i < count; i++){
             auto * gt_data = gt.data() + i * dim;
             auto * avx512_data = avx512_datas.data() + i * dim;
             auto * avx2_data = avx2_datas.data() + i * dim;
+            auto * avx_data = avx_datas.data() + i * dim;
             auto * sse_data = sse_datas.data() + i * dim;
-            // generic::VecRescale(gt_data, dim, 0.5);
-            // avx512::VecRescale(gt_data, dim, 0.5);
-            // avx2::VecRescale(gt_data, dim, 0.5);
-            // sse::VecRescale(gt_data, dim, 0.5);
-            // for(int i = 0; i < dim; i++){
-            //     REQUIRE(gt_data[i] - avx512_data[i] < 1e-5);
-            //     REQUIRE(gt_data[i] - avx2_data[i] < 1e-5);
-            //     REQUIRE(gt_data[i] - sse_data[i] < 1e-5);
-            // }
 
-            generic::FHTRotate(gt_data, dim);
-            avx512::FHTRotate(gt_data, dim);
-            avx2::FHTRotate(gt_data, dim);
-            sse::FHTRotate(gt_data, dim);
-
-            for(int i = 0; i < dim; i++){
-                REQUIRE(gt_data[i] - avx512_data[i] < 1e-5);
-                REQUIRE(gt_data[i] - avx2_data[i] < 1e-5);
-                REQUIRE(gt_data[i] - sse_data[i] < 1e-5);
+            const float delta = 1e-5;
+            generic::VecRescale(gt_data, dim, 0.5);
+            if (SimdStatus::SupportAVX512()){
+                avx512::VecRescale(avx512_data, dim, 0.5);
+                for (int i = 0; i < dim; i++){
+                    REQUIRE(gt_data[i] - avx512_data[i] < delta);
+                }
             }
-
-            // generic::KacsWalk(gt_data, dim);
-            // avx512::KacsWalk(gt_data, dim);
-            // avx2::KacsWalk(gt_data, dim);
-            // sse::KacsWalk(gt_data, dim);
-
-            // for(int i = 0; i < dim; i++){
-            //     REQUIRE(gt_data[i] - avx512_data[i] < 1e-5);
-            //     REQUIRE(gt_data[i] - avx2_data[i] < 1e-5);
-            //     REQUIRE(gt_data[i] - sse_data[i] < 1e-5);
-            // }
+            if (SimdStatus::SupportAVX2()){
+                avx2::VecRescale(avx2_data, dim, 0.5);
+                for (int i = 0; i < dim; i++){
+                REQUIRE(gt_data[i] - avx2_data[i] < delta);
+                }
+            }
+            if (SimdStatus::SupportAVX()){
+                avx::VecRescale(avx_data, dim, 0.5);
+                for (int i = 0; i < dim; i++){
+                REQUIRE(gt_data[i] - avx_data[i] < delta);
+                }
+            }
+            if (SimdStatus::SupportSSE()){
+                sse::VecRescale(sse_data, dim, 0.5);
+                for(int i = 0; i < dim; i++){
+                    REQUIRE(gt_data[i] - sse_data[i] < delta);
+                }
+            }
         }
     }
 }
+
+TEST_CASE("SIMD test for kacs_walk", "[ut][simd]"){
+    auto dims = fixtures::get_common_used_dims();
+    int64_t count = 100;
+    for (const auto& dim : dims) {
+        std::vector<float> gt = fixtures::GenerateVectors<float>(count, dim);
+
+        std::vector<float> avx512_datas(gt.size());
+        avx512_datas.assign(gt.begin(), gt.end());
+        std::vector<float> avx2_datas(gt.size());
+        avx2_datas.assign(gt.begin(), gt.end());
+        std::vector<float> avx_datas(gt.size());
+        avx_datas.assign(gt.begin(), gt.end());
+        std::vector<float> sse_datas(gt.size());
+        sse_datas.assign(gt.begin(), gt.end());
+
+        const float delta = 1e-5;
+        for (int i = 0; i < count; i++){
+            auto * gt_data = gt.data() + i * dim;
+            generic::KacsWalk(gt_data, dim);
+            if (SimdStatus::SupportAVX512()){
+                auto * avx512_data = avx512_datas.data() + i * dim;
+                avx512::KacsWalk(avx512_data, dim);
+                for (int i = 0; i < dim; i++){
+                    REQUIRE(gt_data[i] - avx512_data[i] < delta);
+                }
+            }
+            if (SimdStatus::SupportAVX2()){
+                auto * avx2_data = avx2_datas.data() + i * dim;
+                avx2::KacsWalk(avx2_data, dim);
+                for (int i = 0; i < dim; i++){
+                REQUIRE(gt_data[i] - avx2_data[i] < delta);
+                }
+            }
+            if (SimdStatus::SupportAVX()){
+                auto * avx_data = avx_datas.data() + i * dim;
+                avx::KacsWalk(avx_data, dim);
+                for (int i = 0; i < dim; i++){
+                REQUIRE(gt_data[i] - avx_data[i] < delta);
+                }
+            }
+            if (SimdStatus::SupportSSE()){
+                auto * sse_data = sse_datas.data() + i * dim;
+                sse::KacsWalk(sse_data, dim);
+                for(int i = 0; i < dim; i++){
+                    REQUIRE(gt_data[i] - sse_data[i] < delta);
+                }
+            }
+        }
+    }
+}
+
+TEST_CASE("SIMD test for rotate", "[ut][simd]"){
+    auto dims = fixtures::get_common_used_dims();
+    int64_t count = 100;
+    for (const auto& dim : dims) {
+        std::vector<float> gt = fixtures::GenerateVectors<float>(count, dim);
+
+        std::vector<float> avx512_datas(gt.size());
+        avx512_datas.assign(gt.begin(), gt.end());
+        std::vector<float> avx2_datas(gt.size());
+        avx2_datas.assign(gt.begin(), gt.end());
+        std::vector<float> avx_datas(gt.size());
+        avx_datas.assign(gt.begin(), gt.end());
+        std::vector<float> sse_datas(gt.size());
+        sse_datas.assign(gt.begin(), gt.end());
+
+        const float delta = 1e-5;
+        for (int i = 0; i < count; i++){
+            auto * gt_data = gt.data() + i * dim;
+            size_t tmp_dim = dim;
+            size_t ret = 0;
+            while (tmp_dim > 1) {
+                ret++;
+                tmp_dim >>= 1;
+            }
+            size_t trunc_dim = 1 << ret;
+            int start = dim - trunc_dim;
+            generic::FHTRotate(gt_data, trunc_dim);
+            generic::FHTRotate(gt_data + start, trunc_dim);
+
+            if (SimdStatus::SupportAVX512()){
+                auto * avx512_data = avx512_datas.data() + i * dim;
+                avx512::FHTRotate(avx512_data, trunc_dim);
+                avx512::FHTRotate(avx512_data + start, trunc_dim);
+                for(int i = 0; i < dim; i++){
+                    REQUIRE(gt_data[i] - avx512_data[i] < delta);
+                }
+            }
+            if (SimdStatus::SupportAVX2()){
+                auto * avx2_data = avx2_datas.data() + i * dim;
+                avx2::FHTRotate(avx2_data, trunc_dim);
+                avx2::FHTRotate(avx2_data + start, trunc_dim);
+                for(int i = 0; i < dim; i++){
+                    REQUIRE(gt_data[i] - avx2_data[i] < delta);
+                }
+            }
+            if (SimdStatus::SupportAVX()){
+                auto * avx_data = avx_datas.data() + i * dim;
+                avx::FHTRotate(avx_data, trunc_dim);
+                avx::FHTRotate(avx_data + start, trunc_dim);
+                for(int i = 0; i < dim; i++){
+                    REQUIRE(gt_data[i] - avx_data[i] < delta);
+                }
+            }
+            if (SimdStatus::SupportSSE()){
+                auto * sse_data = sse_datas.data() + i * dim;
+                sse::FHTRotate(sse_data, trunc_dim);
+                sse::FHTRotate(sse_data + start, trunc_dim);
+                for(int i = 0; i < dim; i++){
+                    REQUIRE(gt_data[i] - sse_data[i] < delta);
+                }
+            }
+        }
+    }
+}
+
+

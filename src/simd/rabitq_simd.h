@@ -63,6 +63,21 @@ KacsWalk(float* data, std::size_t len);
 namespace avx {
 float
 RaBitQFloatBinaryIP(const float* vector, const uint8_t* bits, uint64_t dim, float inv_sqrt_d);
+
+void
+VecRescale(float* data, std::size_t dim, float val);
+
+void
+FHTRotate(float* data, std::size_t dim_);
+
+void
+FlipSign(const uint8_t* flip, float* data, std::size_t dim);
+
+void
+RotateOp(float* data, int idx, int dim_, int step);
+
+void
+KacsWalk(float* data, std::size_t len);
 }  // namespace avx
 
 namespace sse {

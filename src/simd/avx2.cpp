@@ -1004,7 +1004,7 @@ VecRescale(float* data, size_t dim, float val) {
         data[i] *= val;
     }
 #else
-    return sse::VecRescale(data, dim, val);
+    return avx::VecRescale(data, dim, val);
 #endif
 }
 
@@ -1020,7 +1020,7 @@ RotateOp(float* data, int idx, int dim_, int step){
         }
     }
 #else
-    return sse::RotateOp(data, idx, dim_, step);
+    return avx::RotateOp(data, idx, dim_, step);
 #endif
 }
 
@@ -1040,7 +1040,7 @@ FHTRotate(float* data, size_t dim_) {
             step *= 2;
         }
 #else
-    return sse::FHTRotate(data, dim_);
+    return avx::FHTRotate(data, dim_);
 #endif
 }
 
@@ -1068,7 +1068,7 @@ KacsWalk(float* data, size_t len) {
         //As we need to resize the while sequence in the next step, so we increase the val of No.len/2 item to eliminate the impact of the following resize.
     }
 #else
-    return sse::KacsWalk(data, len);
+    return avx::KacsWalk(data, len);
 #endif
 }
 }  // namespace vsag::avx2

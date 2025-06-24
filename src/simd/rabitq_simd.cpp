@@ -62,6 +62,10 @@ GetFHTRotate() {
     }else if (SimdStatus::SupportAVX2()){
 #if defined(ENABLE_AVX2)
         return avx2::FHTRotate;
+#endif
+    }else if (SimdStatus::SupportAVX()){
+#if defined(ENABLE_AVX)
+        return avx::FHTRotate;
 #endif        
     }else if (SimdStatus::SupportSSE()){
 #if defined(ENABLE_SSE)
@@ -81,6 +85,10 @@ GetKacsWalk() {
 #if defined(ENABLE_AVX2)
         return avx2::KacsWalk;
 #endif
+    }else if (SimdStatus::SupportAVX()){
+#if defined(ENABLE_AVX)
+        return avx::KacsWalk;
+#endif        
     }else if (SimdStatus::SupportSSE()){
 #if defined(ENABLE_SSE)
         return sse::KacsWalk;
@@ -99,6 +107,10 @@ GetVecRescale() {
 #if defined(ENABLE_AVX2)
     return avx2::VecRescale;
 #endif
+    }else if (SimdStatus::SupportAVX()){
+#if defined(ENABLE_AVX)
+    return avx::VecRescale;
+#endif        
     }else if (SimdStatus::SupportSSE()){
 #if defined(ENABLE_SSE)
     return sse::VecRescale;
@@ -127,6 +139,10 @@ GetRotateOp() {
 #if defined(ENABLE_AVX2)
         return avx2::RotateOp;
 #endif
+    }else if (SimdStatus::SupportAVX()){
+#if defined(ENABLE_AVX)
+        return avx::RotateOp;
+#endif        
     }else if (SimdStatus::SupportSSE()){
 #if defined(ENABLE_SSE)
         return sse::RotateOp;
