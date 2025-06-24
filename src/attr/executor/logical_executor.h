@@ -15,26 +15,33 @@
 
 #pragma once
 
-#include "stream_reader.h"
-#include "stream_writer.h"
+#include "executor.h"
 
-class MatrixRotator {
+namespace vsag {
+class LogicalExecutor : public Executor {
 public:
-    MatrixRotator() = default;
-    virtual ~MatrixRotator() = default;
+    explicit LogicalExecutor(Allocator* allocator,
+                             const ExprPtr& expr,
+                             const AttrInvertedInterfacePtr& attr_index);
 
-    virtual void
-    Transform(const float* original_vec, float* transformed_vec) const = 0;
+    void
+    Clear() override;
 
-    virtual void
-    InverseTransform(const float* transformed_vec, float* original_vec) const = 0;
+    FilterPtr
+    Run() override;
 
-    virtual bool
-    Build() = 0;
+    FilterPtr
+    RunWithBucket(BucketIdType bucket_id) override;
 
-    virtual void
-    Serialize(StreamWriter& writer) = 0;
+private:
+    FilterPtr
+    logical_run();
 
-    virtual void
-    Deserialize(StreamReader& reader) = 0;
+private:
+    ExecutorPtr left_{nullptr};
+    ExecutorPtr right_{nullptr};
+
+    LogicalOperator op_;
 };
+
+}  // namespace vsag
