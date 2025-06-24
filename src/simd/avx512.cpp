@@ -1077,13 +1077,13 @@ KacsWalk(float* data, size_t len) {
         _mm512_storeu_ps(&data[i], new_x);
         _mm512_storeu_ps(&data[i + offset], new_y);
     }
-    for(; i < len / 2; i++){
+    for (; i < len / 2; i++) {
         float x = data[i];
         float y = data[i + offset];
         data[i] = x + y;
-        data[i + offset] = x - y; 
+        data[i + offset] = x - y;
     }
-    if(base != 0){
+    if (base != 0) {
         data[len / 2] *= std::sqrt(2);
     }
 #else
@@ -1127,7 +1127,7 @@ FlipSign(const uint8_t* flip, float* data, size_t dim) {
         vec3 = _mm512_mask_xor_ps(vec3, mask3, vec3, sign_flip);
         _mm512_storeu_ps(&data[i + 48], vec3);
     }
-    for(; i < dim; i++){
+    for (; i < dim; i++) {
         bool mask = (flip[i / 8] & (1 << (i % 8))) != 0;
         if (mask) {
             data[i] = -data[i];
@@ -1157,14 +1157,14 @@ VecRescale(float* data, size_t dim, float val) {
 }
 
 void
-RotateOp(float* data, int idx, int dim_, int step){
+RotateOp(float* data, int idx, int dim_, int step) {
 #if defined(ENABLE_AVX512)
     for (int i = 0; i < dim_; i += step * 2) {
-            for (int j = 0; j < step; j+=16) {
+        for (int j = 0; j < step; j += 16) {
             __m512 g1 = _mm512_loadu_ps(&data[i + j]);
             __m512 g2 = _mm512_loadu_ps(&data[i + j + step]);
-            _mm512_storeu_ps(&data[i + j],_mm512_add_ps(g1, g2));
-            _mm512_storeu_ps(&data[i + j + step],_mm512_sub_ps(g1, g2));
+            _mm512_storeu_ps(&data[i + j], _mm512_add_ps(g1, g2));
+            _mm512_storeu_ps(&data[i + j + step], _mm512_sub_ps(g1, g2));
         }
     }
 #else
@@ -1172,23 +1172,23 @@ RotateOp(float* data, int idx, int dim_, int step){
 #endif
 }
 
-void 
+void
 FHTRotate(float* data, size_t dim_) {
 #if defined(ENABLE_AVX512)
     size_t n = dim_;
-        size_t step = 1;
-        while (step < n) {
-            if(step >= 16){// step is the power of 2
-                avx512::RotateOp(data, 0, dim_, step);
-            }else if(step == 8){
-                avx2::RotateOp(data, 0, dim_, step);
-            }else if(step == 4){
-                sse::RotateOp(data, 0, dim_, step);
-            }else{
-                generic::RotateOp(data, 0, dim_, step);
-            }
-            step *= 2;
+    size_t step = 1;
+    while (step < n) {
+        if (step >= 16) {  // step is the power of 2
+            avx512::RotateOp(data, 0, dim_, step);
+        } else if (step == 8) {
+            avx2::RotateOp(data, 0, dim_, step);
+        } else if (step == 4) {
+            sse::RotateOp(data, 0, dim_, step);
+        } else {
+            generic::RotateOp(data, 0, dim_, step);
         }
+        step *= 2;
+    }
 #else
     return generic::FHTRotate(data, dim_);
 #endif

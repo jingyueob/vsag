@@ -995,7 +995,7 @@ VecRescale(float* data, size_t dim, float val) {
 #if defined(ENABLE_AVX2)
     int i = 0;
     __m256 val_vec = _mm256_set1_ps(val);
-    for(; i + 8 < dim; i+= 8){
+    for (; i + 8 < dim; i += 8) {
         __m256 data_vec = _mm256_loadu_ps(&data[i]);
         __m256 result_vec = _mm256_mul_ps(data_vec, val_vec);
         _mm256_storeu_ps(&data[i], result_vec);
@@ -1009,14 +1009,14 @@ VecRescale(float* data, size_t dim, float val) {
 }
 
 void
-RotateOp(float* data, int idx, int dim_, int step){
+RotateOp(float* data, int idx, int dim_, int step) {
 #if defined(ENABLE_AVX2)
     for (int i = idx; i < dim_; i += step * 2) {
         for (int j = 0; j < step; j += 8) {
             __m256 g1 = _mm256_loadu_ps(&data[i + j]);
             __m256 g2 = _mm256_loadu_ps(&data[i + j + step]);
-            _mm256_storeu_ps(&data[i + j],_mm256_add_ps(g1, g2));
-            _mm256_storeu_ps(&data[i + j + step],_mm256_sub_ps(g1, g2));
+            _mm256_storeu_ps(&data[i + j], _mm256_add_ps(g1, g2));
+            _mm256_storeu_ps(&data[i + j + step], _mm256_sub_ps(g1, g2));
         }
     }
 #else
@@ -1028,17 +1028,17 @@ void
 FHTRotate(float* data, size_t dim_) {
 #if defined(ENABLE_AVX2)
     size_t n = dim_;
-        size_t step = 1;
-        while (step < n) {
-            if(step >= 8){
-                avx2::RotateOp(data, 0, dim_, step);
-            } else if(step == 4){
-                sse::RotateOp(data, 0, dim_, step);
-            }else{
-                generic::RotateOp(data, 0, dim_, step);
-            }
-            step *= 2;
+    size_t step = 1;
+    while (step < n) {
+        if (step >= 8) {
+            avx2::RotateOp(data, 0, dim_, step);
+        } else if (step == 4) {
+            sse::RotateOp(data, 0, dim_, step);
+        } else {
+            generic::RotateOp(data, 0, dim_, step);
         }
+        step *= 2;
+    }
 #else
     return avx::FHTRotate(data, dim_);
 #endif
@@ -1050,11 +1050,11 @@ KacsWalk(float* data, size_t len) {
     size_t base = len % 2;
     size_t offset = base + (len / 2);  // for odd dim
     size_t i = 0;
-    for(; i + 8 < len / 2; i += 8){
+    for (; i + 8 < len / 2; i += 8) {
         __m256 x = _mm256_loadu_ps(&data[i]);
         __m256 y = _mm256_loadu_ps(&data[i + offset]);
-        _mm256_storeu_ps(&data[i],_mm256_add_ps(x, y));
-        _mm256_storeu_ps(&data[i + offset],_mm256_sub_ps(x, y));
+        _mm256_storeu_ps(&data[i], _mm256_add_ps(x, y));
+        _mm256_storeu_ps(&data[i + offset], _mm256_sub_ps(x, y));
     }
     for (; i < len / 2; i++) {
         float add = data[i] + data[i + offset];

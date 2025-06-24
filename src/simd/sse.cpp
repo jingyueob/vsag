@@ -904,14 +904,14 @@ BitNot(const uint8_t* x, const uint64_t num_byte, uint8_t* result) {
 }
 
 void
-RotateOp(float* data, int idx, int dim_, int step){
+RotateOp(float* data, int idx, int dim_, int step) {
 #if defined(ENABLE_SSE)
     for (int i = idx; i < dim_; i += step * 2) {
         for (int j = 0; j < step; j += 4) {
             __m128 g1 = _mm_loadu_ps(&data[i + j]);
             __m128 g2 = _mm_loadu_ps(&data[i + j + step]);
-            _mm_storeu_ps(&data[i + j],_mm_add_ps(g1, g2));
-            _mm_storeu_ps(&data[i + j + step],_mm_sub_ps(g1, g2));
+            _mm_storeu_ps(&data[i + j], _mm_add_ps(g1, g2));
+            _mm_storeu_ps(&data[i + j + step], _mm_sub_ps(g1, g2));
         }
     }
 #else
@@ -925,7 +925,7 @@ FHTRotate(float* data, size_t dim_) {
     size_t n = dim_;
     size_t step = 1;
     while (step < n) {
-        if(step >= 4){
+        if (step >= 4) {
             sse::RotateOp(data, 0, dim_, step);
         } else {
             generic::RotateOp(data, 0, dim_, step);
@@ -942,7 +942,7 @@ VecRescale(float* data, size_t dim, float val) {
 #if defined(ENABLE_SSE)
     int i = 0;
     __m128 val_vec = _mm_set1_ps(val);
-    for(; i + 4 < dim; i+= 4){
+    for (; i + 4 < dim; i += 4) {
         __m128 data_vec = _mm_loadu_ps(&data[i]);
         __m128 result_vec = _mm_mul_ps(data_vec, val_vec);
         _mm_storeu_ps(&data[i], result_vec);
@@ -961,11 +961,11 @@ KacsWalk(float* data, size_t len) {
     size_t base = len % 2;
     size_t offset = base + (len / 2);  // for odd dim
     size_t i = 0;
-    for(; i + 4 < len / 2; i += 4){
+    for (; i + 4 < len / 2; i += 4) {
         __m128 x = _mm_loadu_ps(&data[i]);
         __m128 y = _mm_loadu_ps(&data[i + offset]);
-        _mm_storeu_ps(&data[i],_mm_add_ps(x, y));
-        _mm_storeu_ps(&data[i + offset],_mm_sub_ps(x, y));
+        _mm_storeu_ps(&data[i], _mm_add_ps(x, y));
+        _mm_storeu_ps(&data[i + offset], _mm_sub_ps(x, y));
     }
     for (; i < len / 2; i++) {
         float add = data[i] + data[i + offset];
@@ -978,7 +978,7 @@ KacsWalk(float* data, size_t len) {
         //In odd condition, we operate the prev len/2 items and the post len/2 items, the No.len/2 item stay still,
         //As we need to resize the while sequence in the next step, so we increase the val of No.len/2 item to eliminate the impact of the following resize.
     }
-#else 
+#else
     return generic::KacsWalk(data, len);
 #endif
 }

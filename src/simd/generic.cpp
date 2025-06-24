@@ -652,9 +652,9 @@ VecRescale(float* data, size_t dim, float val) {
 }
 
 void
-RotateOp(float* data, int idx, int dim_, int step){
-    for (int i = idx; i < dim_; i += 2 * step){
-        for(int j = 0; j < step; j++){
+RotateOp(float* data, int idx, int dim_, int step) {
+    for (int i = idx; i < dim_; i += 2 * step) {
+        for (int j = 0; j < step; j++) {
             float x = data[i + j];
             float y = data[i + j + step];
             data[i + j] = x + y;
