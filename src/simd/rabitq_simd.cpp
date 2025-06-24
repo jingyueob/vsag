@@ -71,8 +71,12 @@ GetFHTRotate() {
 #if defined(ENABLE_SSE)
         return sse::FHTRotate;
 #endif
+<<<<<<< HEAD
     }
+=======
+>>>>>>> e6ff2d84a97c3d14d2675d03c40caf65a735a1df
     return generic::FHTRotate;
+    }
 }
 static KacsWalkType
 GetKacsWalk() {
