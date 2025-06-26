@@ -995,7 +995,7 @@ VecRescale(float* data, size_t dim, float val) {
 #if defined(ENABLE_AVX2)
     int i = 0;
     __m256 val_vec = _mm256_set1_ps(val);
-    for (; i + 8 < dim; i += 8) {
+    for (; i + 8 <= dim; i += 8) {
         __m256 data_vec = _mm256_loadu_ps(&data[i]);
         __m256 result_vec = _mm256_mul_ps(data_vec, val_vec);
         _mm256_storeu_ps(&data[i], result_vec);
@@ -1003,6 +1003,7 @@ VecRescale(float* data, size_t dim, float val) {
     for (; i < dim; i++) {
         data[i] *= val;
     }
+    // sse::VecRescale(data + i, dim - i, val);
 #else
     return avx::VecRescale(data, dim, val);
 #endif
@@ -1050,7 +1051,7 @@ KacsWalk(float* data, size_t len) {
     size_t base = len % 2;
     size_t offset = base + (len / 2);  // for odd dim
     size_t i = 0;
-    for (; i + 8 < len / 2; i += 8) {
+    for (; i + 8 <= len / 2; i += 8) {
         __m256 x = _mm256_loadu_ps(&data[i]);
         __m256 y = _mm256_loadu_ps(&data[i + offset]);
         _mm256_storeu_ps(&data[i], _mm256_add_ps(x, y));

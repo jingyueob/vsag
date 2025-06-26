@@ -1067,7 +1067,7 @@ KacsWalk(float* data, size_t len) {
     int base = len % 2;
     int offset = base + (len / 2);
     int i = 0;
-    for (; i + 16 < len / 2; i += 16) {
+    for (; i + 16 <= len / 2; i += 16) {
         __m512 x = _mm512_loadu_ps(&data[i]);
         __m512 y = _mm512_loadu_ps(&data[i + offset]);
 
@@ -1151,6 +1151,7 @@ VecRescale(float* data, size_t dim, float val) {
     for (; i < dim; i++) {
         data[i] *= val;
     }
+    // avx2::VecRescale(data + i, dim - i, val);
 #else
     return avx2::VecRescale(data, dim, val);
 #endif
