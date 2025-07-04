@@ -350,18 +350,6 @@ RaBitQuantizer<metric>::TrainImpl(const DataType* data, uint64_t count) {
     for (uint64_t d = 0; d < this->dim_; d++) {
         centroid_[d] = centroid_[d] / (float)count;
     }
-    if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-        float norm_cnetroid = 0;
-        for (int d = 0; d < this->dim_; d++) {
-            norm_cnetroid += centroid_[d] * centroid_[d];
-        }
-        if(norm_cnetroid < 1e-5){
-            norm_cnetroid = 1.0f;
-        }
-        for (int d = 0; d < this->dim_; d++) {
-            centroid_[d] /= std::sqrt(norm_cnetroid);
-        }
-    }
 
     rom_->Train(data, count);
 
@@ -389,12 +377,6 @@ RaBitQuantizer<metric>::EncodeOneImpl(const DataType* data, uint8_t* codes) cons
         for (uint64_t d = 0; d < this->dim_; ++d) {
             raw_norm += data[d] * data[d];
         }
-    }
-    Vector<DataType> norm_data(this->allocator_);
-    if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-        norm_data.resize(this->dim_);
-        Normalize(data, norm_data.data(), this->dim_);
-        data = norm_data.data();
     }
     // 1. pca
     if (pca_dim_ != this->original_dim_) {
@@ -555,7 +537,7 @@ RaBitQuantizer<metric>::ComputeQueryBaseImpl(const uint8_t* query_codes,
         result += (query_mrq_norm_sqr + base_mrq_norm_sqr);
     }
     if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-        result =  1 - (2 - result) * 0.5F;
+        result =  1 - (quer_raw_norm + base_raw_norm - result) * 0.5F / (std::sqrt(quer_raw_norm) * std::sqrt(base_raw_norm));
     }
     if constexpr (metric == MetricType::METRIC_TYPE_IP) {
         result =  1 - (quer_raw_norm + base_raw_norm - result) * 0.5F;
@@ -716,12 +698,6 @@ RaBitQuantizer<metric>::ProcessQueryImpl(const DataType* query,
             }
         }
 
-        Vector<DataType> norm_data(this->allocator_);
-        if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-            norm_data.resize(this->dim_);
-            Normalize(query, norm_data.data(), this->dim_);
-            query = norm_data.data();
-        }
 
         // 1. pca
         if (pca_dim_ != this->original_dim_) {

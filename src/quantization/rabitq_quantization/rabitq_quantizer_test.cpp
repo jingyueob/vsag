@@ -94,7 +94,7 @@ TEST_CASE("RaBitQ Compute", "[ut][RaBitQuantizer]") {
     auto num_bits_per_dim = GENERATE(4, 32);
     for (auto dim : dims) {
         float numeric_error = 1 / std::sqrt(dim) * dim;
-        float related_error = 0.15f;
+        float related_error = 0.05f;
         float unbounded_numeric_error_rate = 0.05f;
         float unbounded_related_error_rate = 0.1f;
         if (num_bits_per_dim == 4) {
@@ -165,7 +165,7 @@ TEST_CASE("RaBitQ Serialize and Deserialize", "[ut][RaBitQuantizer]") {
     auto num_bits_per_dim = GENERATE(4, 32);
     for (auto dim : dims) {
         float numeric_error = 1 / std::sqrt(dim) * dim;
-        float related_error = 0.15F;
+        float related_error = 0.05F;
         float unbounded_numeric_error_rate = 0.05F;
         float unbounded_related_error_rate = 0.1F;
         if (num_bits_per_dim == 4) {
