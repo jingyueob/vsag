@@ -338,10 +338,9 @@ RaBitQuantizer<metric>::TrainImpl(const DataType* data, uint64_t count) {
     if (this->is_trained_) {
         return true;
     }
-    Vector<DataType> tmp(this->allocator_);
-    if constexpr (metric == MetricType::METRIC_TYPE_IP or
-                    metric == MetricType::METRIC_TYPE_COSINE) {
-        tmp.resize(this->dim_ * count);
+    Vector<DataType> norm_data(this->allocator_);
+    if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
+        norm_data.resize(this->dim_ * count);
         for(int c = 0; c < count; c++){
             float norm = 0;
             for(int d = 0; d < this->dim_; d++){
@@ -351,10 +350,10 @@ RaBitQuantizer<metric>::TrainImpl(const DataType* data, uint64_t count) {
                 norm = 1.0f;
             }
             for(int d = 0; d < this->dim_; d++){
-                tmp[c * this->dim_ + d] = data[c * this->dim_ + d] / std::sqrt(norm);
+                norm_data[c * this->dim_ + d] = data[c * this->dim_ + d] / std::sqrt(norm);
             }
         }
-        data = tmp.data();
+        data = norm_data.data();
     }
 
     // pca
@@ -409,12 +408,11 @@ RaBitQuantizer<metric>::EncodeOneImpl(const DataType* data, uint8_t* codes) cons
             raw_norm += data[d] * data[d];
         }
     }
-    Vector<DataType> tmp(this->allocator_);
-    if constexpr (metric == MetricType::METRIC_TYPE_IP or
-                    metric == MetricType::METRIC_TYPE_COSINE) {
-        tmp.resize(this->dim_);
-        Normalize(data, tmp.data(), this->dim_);
-        data = tmp.data();
+    Vector<DataType> norm_data(this->allocator_);
+    if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
+        norm_data.resize(this->dim_);
+        Normalize(data, norm_data.data(), this->dim_);
+        data = norm_data.data();
     }
     // 1. pca
     if (pca_dim_ != this->original_dim_) {
@@ -573,7 +571,7 @@ RaBitQuantizer<metric>::ComputeQueryBaseImpl(const uint8_t* query_codes,
         result =  1 - (2 - result) * 0.5F;
     }
     if constexpr (metric == MetricType::METRIC_TYPE_IP) {
-        result =  1 - (2 - result) * 0.5F * std::sqrt(quer_raw_norm) * std::sqrt(base_raw_norm);
+        result =  1 - (quer_raw_norm + base_raw_norm - result) * 0.5F;
     }
 
     return result;
@@ -731,12 +729,11 @@ RaBitQuantizer<metric>::ProcessQueryImpl(const DataType* query,
             }
         }
 
-        Vector<DataType> tmp(this->allocator_);
-        if constexpr (metric == MetricType::METRIC_TYPE_IP or
-                        metric == MetricType::METRIC_TYPE_COSINE) {
-            tmp.resize(this->dim_);
-            float aaaa = Normalize(query, tmp.data(), this->dim_);
-            query = tmp.data();
+        Vector<DataType> norm_data(this->allocator_);
+        if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
+            norm_data.resize(this->dim_);
+            Normalize(query, norm_data.data(), this->dim_);
+            query = norm_data.data();
         }
 
         // 1. pca
