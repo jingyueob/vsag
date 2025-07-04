@@ -345,18 +345,12 @@ TestComputer(Quantizer<T>& quant,
             quant.EncodeOne(vecs.data() + j * dim, code);
             quant.ComputeDist(*computer, code, dists1.data() + j);
             REQUIRE(quant.ComputeDist(*computer, code) == dists1[j]);
-            // std::cout<<"diff : "<<std::abs(gt - dists1[j])<< "  error: "<<error <<std::endl;
             if (std::abs(gt - dists1[j]) > error) {
-                // std:: cout << "gt1: "<< gt<< "  dist["<<j<<"]" << dists1[j]<<std::endl;
                 count_unbounded_numeric_error++;
             }
-            // else{
-            //     std:: cout << "gt2: "<< gt<< "  dist["<<j<<"]" << dists1[j]<<std::endl;
-            // }
-            // if (std::abs(gt - dists1[j]) > related_error * gt) {
-            //     std:: cout << "gt2: "<< gt<< "dist["<<j<<"]" << dists1[j]<<std::endl;
-            //     count_unbounded_related_error++;
-            // }
+            if (std::abs(gt - dists1[j]) > std::abs(related_error * gt)) {
+                count_unbounded_related_error++;
+            }
         }
 
         // Test Compute Batch
@@ -369,7 +363,7 @@ TestComputer(Quantizer<T>& quant,
         }
     }
     REQUIRE(count_unbounded_numeric_error / (query_count * count) <= unbounded_numeric_error_rate);
-    // REQUIRE(count_unbounded_related_error / (query_count * count) <= unbounded_related_error_rate);
+    REQUIRE(count_unbounded_related_error / (query_count * count) <= unbounded_related_error_rate);
 }
 
 template <typename T, MetricType metric, bool uniform = false>
