@@ -325,23 +325,6 @@ RaBitQuantizer<metric>::TrainImpl(const DataType* data, uint64_t count) {
     if (this->is_trained_) {
         return true;
     }
-    // Vector<DataType> norm_data(this->allocator_);
-    // if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-    //     norm_data.resize(this->dim_ * count);
-    //     for(int c = 0; c < count; c++){
-    //         float norm = 0;
-    //         for(int d = 0; d < this->dim_; d++){
-    //             norm += data[c * this->dim_ + d] * data[c * this->dim_ + d];
-    //         }
-    //         if(norm == 0){
-    //             norm = 1.0f;
-    //         }
-    //         for(int d = 0; d < this->dim_; d++){
-    //             norm_data[c * this->dim_ + d] = data[c * this->dim_ + d] / std::sqrt(norm);
-    //         }
-    //     }
-    //     data = norm_data.data();
-    // }
 
     // pca
     if (pca_dim_ != this->original_dim_) {
@@ -367,12 +350,17 @@ RaBitQuantizer<metric>::TrainImpl(const DataType* data, uint64_t count) {
     for (uint64_t d = 0; d < this->dim_; d++) {
         centroid_[d] = centroid_[d] / (float)count;
     }
-    float norm_cnetroid = 0;
-    for (int d = 0; d < this->dim_; d++) {
-        norm_cnetroid += centroid_[d] * centroid_[d];
-    }
-    for (int d = 0; d < this->dim_; d++) {
-        centroid_[d] /= std::sqrt(norm_cnetroid);
+    if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
+        float norm_cnetroid = 0;
+        for (int d = 0; d < this->dim_; d++) {
+            norm_cnetroid += centroid_[d] * centroid_[d];
+        }
+        if(norm_cnetroid < 1e-5){
+            norm_cnetroid = 1.0f;
+        }
+        for (int d = 0; d < this->dim_; d++) {
+            centroid_[d] /= std::sqrt(norm_cnetroid);
+        }
     }
 
     rom_->Train(data, count);
@@ -481,17 +469,22 @@ RaBitQuantizer<metric>::DecodeOneImpl(const uint8_t* codes, DataType* data) {
         bool bit = ((codes[d / 8] >> (d % 8)) & 1) != 0;
         normed_data[d] = bit ? inv_sqrt_d_ : -inv_sqrt_d_;
     }
-
     // 3. inverse normalize
     InverseNormalizeWithCentroid(normed_data.data(),
                                  centroid_.data(),
                                  transformed_data.data(),
                                  this->dim_,
                                  *(norm_type*)(codes + offset_norm_));
-
     // 4. inverse random projection
     // Note that the value may be much different between original since inv_sqrt_d is small
     rom_->InverseTransform(transformed_data.data(), data);
+    float raw_norm = 0;
+    if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
+        raw_norm = *(norm_type*)(codes + offset_raw_norm_);
+        for (int d = 0; d < this->dim_; d++){
+            data[d] *= std::sqrt(raw_norm);
+        }
+    }
     return true;
 }
 

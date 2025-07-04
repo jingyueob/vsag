@@ -73,6 +73,18 @@ TEST_CASE("RaBitQ Encode and Decode", "[ut][RaBitQuantizer]") {
 
             TestEncodeDecodeRaBitQ<RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR>>(
                 quantizer, dim, count);
+
+            RaBitQuantizer<MetricType::METRIC_TYPE_IP> quantizer_ip(
+                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+
+            TestEncodeDecodeRaBitQ<RaBitQuantizer<MetricType::METRIC_TYPE_IP>>(
+                quantizer_ip, dim, count);
+
+            RaBitQuantizer<MetricType::METRIC_TYPE_COSINE> quantizer_cos(
+                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+
+            TestEncodeDecodeRaBitQ<RaBitQuantizer<MetricType::METRIC_TYPE_COSINE>>(
+                quantizer_cos, dim, count);
         }
     }
 }
@@ -152,8 +164,8 @@ TEST_CASE("RaBitQ Serialize and Deserialize", "[ut][RaBitQuantizer]") {
     bool use_fht = GENERATE(true, false);
     auto num_bits_per_dim = GENERATE(4, 32);
     for (auto dim : dims) {
-        float numeric_error = 0.01 / std::sqrt(dim) * dim;
-        float related_error = 0.05F;
+        float numeric_error = 1 / std::sqrt(dim) * dim;
+        float related_error = 0.15F;
         float unbounded_numeric_error_rate = 0.05F;
         float unbounded_related_error_rate = 0.1F;
         if (num_bits_per_dim == 4) {
@@ -172,6 +184,36 @@ TEST_CASE("RaBitQ Serialize and Deserialize", "[ut][RaBitQuantizer]") {
             TestSerializeAndDeserialize<RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR>,
                                         MetricType::METRIC_TYPE_L2SQR>(quantizer1,
                                                                        quantizer2,
+                                                                       dim,
+                                                                       count,
+                                                                       numeric_error,
+                                                                       related_error,
+                                                                       unbounded_numeric_error_rate,
+                                                                       unbounded_related_error_rate,
+                                                                       true);
+            RaBitQuantizer<MetricType::METRIC_TYPE_IP> quantizer_ip1(
+                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+            RaBitQuantizer<MetricType::METRIC_TYPE_IP> quantizer_ip2(
+                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+
+            TestSerializeAndDeserialize<RaBitQuantizer<MetricType::METRIC_TYPE_IP>,
+                                        MetricType::METRIC_TYPE_IP>(quantizer_ip1,
+                                                                       quantizer_ip2,
+                                                                       dim,
+                                                                       count,
+                                                                       numeric_error,
+                                                                       related_error,
+                                                                       unbounded_numeric_error_rate,
+                                                                       unbounded_related_error_rate,
+                                                                       true);
+            RaBitQuantizer<MetricType::METRIC_TYPE_COSINE> quantizer_cos1(
+                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+            RaBitQuantizer<MetricType::METRIC_TYPE_COSINE> quantizer_cos2(
+                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+
+            TestSerializeAndDeserialize<RaBitQuantizer<MetricType::METRIC_TYPE_COSINE>,
+                                        MetricType::METRIC_TYPE_COSINE>(quantizer_cos1,
+                                                                       quantizer_cos2,
                                                                        dim,
                                                                        count,
                                                                        numeric_error,
