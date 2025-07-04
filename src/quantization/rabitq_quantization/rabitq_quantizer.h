@@ -460,13 +460,6 @@ RaBitQuantizer<metric>::DecodeOneImpl(const uint8_t* codes, DataType* data) {
     // 4. inverse random projection
     // Note that the value may be much different between original since inv_sqrt_d is small
     rom_->InverseTransform(transformed_data.data(), data);
-    float raw_norm = 0;
-    if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-        raw_norm = *(norm_type*)(codes + offset_raw_norm_);
-        for (int d = 0; d < this->dim_; d++){
-            data[d] *= std::sqrt(raw_norm);
-        }
-    }
     return true;
 }
 
