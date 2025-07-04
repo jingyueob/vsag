@@ -116,19 +116,6 @@ public:
 
     void
     RecoverOrderSQ4(const uint8_t* output, uint8_t* input) const;
-    
-    static inline float
-    compute_norm(const DataType* data, int dim){
-        float norm = 0;
-        for(int i = 0; i < dim; i++){
-            norm += data[i] * data[i];
-        }
-        if(norm == 0){
-            norm = 1.0f;
-        }
-        norm = std::sqrt(norm);
-        return norm;
-    }
 
     inline float
     L2_UBE(float norm_base_raw, float norm_query_raw, float est_ip_norm) const {
