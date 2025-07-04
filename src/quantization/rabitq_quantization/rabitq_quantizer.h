@@ -325,23 +325,23 @@ RaBitQuantizer<metric>::TrainImpl(const DataType* data, uint64_t count) {
     if (this->is_trained_) {
         return true;
     }
-    Vector<DataType> norm_data(this->allocator_);
-    if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-        norm_data.resize(this->dim_ * count);
-        for(int c = 0; c < count; c++){
-            float norm = 0;
-            for(int d = 0; d < this->dim_; d++){
-                norm += data[c * this->dim_ + d] * data[c * this->dim_ + d];
-            }
-            if(norm == 0){
-                norm = 1.0f;
-            }
-            for(int d = 0; d < this->dim_; d++){
-                norm_data[c * this->dim_ + d] = data[c * this->dim_ + d] / std::sqrt(norm);
-            }
-        }
-        data = norm_data.data();
-    }
+    // Vector<DataType> norm_data(this->allocator_);
+    // if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
+    //     norm_data.resize(this->dim_ * count);
+    //     for(int c = 0; c < count; c++){
+    //         float norm = 0;
+    //         for(int d = 0; d < this->dim_; d++){
+    //             norm += data[c * this->dim_ + d] * data[c * this->dim_ + d];
+    //         }
+    //         if(norm == 0){
+    //             norm = 1.0f;
+    //         }
+    //         for(int d = 0; d < this->dim_; d++){
+    //             norm_data[c * this->dim_ + d] = data[c * this->dim_ + d] / std::sqrt(norm);
+    //         }
+    //     }
+    //     data = norm_data.data();
+    // }
 
     // pca
     if (pca_dim_ != this->original_dim_) {
@@ -366,6 +366,13 @@ RaBitQuantizer<metric>::TrainImpl(const DataType* data, uint64_t count) {
     }
     for (uint64_t d = 0; d < this->dim_; d++) {
         centroid_[d] = centroid_[d] / (float)count;
+    }
+    float norm_cnetroid = 0;
+    for (int d = 0; d < this->dim_; d++) {
+        norm_cnetroid += centroid_[d] * centroid_[d];
+    }
+    for (int d = 0; d < this->dim_; d++) {
+        centroid_[d] /= std::sqrt(norm_cnetroid);
     }
 
     rom_->Train(data, count);
