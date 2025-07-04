@@ -70,7 +70,6 @@ make_instance(const FlattenInterfaceParamPtr& param, const IndexCommonParam& com
     if (quantization_string == QUANTIZATION_TYPE_VALUE_RABITQ) {
         return make_instance<RaBitQuantizer<metric>, IOTemp>(param, common_param);
     }
-    }
     if (quantization_string == QUANTIZATION_TYPE_VALUE_SPARSE) {
         return make_instance<SparseQuantizer<metric>, IOTemp>(param, common_param);
     }
