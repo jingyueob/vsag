@@ -1002,9 +1002,6 @@ VecRescale(float* data, size_t dim, float val) {
     }
 
     sse::VecRescale(data + i, dim - i, val);
-    // for (; i < dim; i++) {
-    //     data[i] *= val;
-    // }
 #else
     return avx::VecRescale(data, dim, val);
 #endif

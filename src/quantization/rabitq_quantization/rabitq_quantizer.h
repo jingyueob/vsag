@@ -16,10 +16,10 @@
 #pragma once
 
 #include <cmath>
+#include <iostream>
 #include <limits>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include "impl/transform/transformer_headers.h"
 #include "index/index_common_param.h"
@@ -530,10 +530,14 @@ RaBitQuantizer<metric>::ComputeQueryBaseImpl(const uint8_t* query_codes,
         result += (query_mrq_norm_sqr + base_mrq_norm_sqr);
     }
     if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-        result =  1 - (quer_raw_norm + base_raw_norm - result) * 0.5F / (std::sqrt(quer_raw_norm) * std::sqrt(base_raw_norm));
+        if (is_approx_zero(quer_raw_norm) or is_approx_zero(base_raw_norm)){
+            result = 1;
+        }
+        result = 1 - (quer_raw_norm + base_raw_norm - result) * 0.5F /
+                         (std::sqrt(quer_raw_norm) * std::sqrt(base_raw_norm));
     }
     if constexpr (metric == MetricType::METRIC_TYPE_IP) {
-        result =  1 - (quer_raw_norm + base_raw_norm - result) * 0.5F;
+        result = 1 - (quer_raw_norm + base_raw_norm - result) * 0.5F;
     }
 
     return result;
@@ -690,7 +694,6 @@ RaBitQuantizer<metric>::ProcessQueryImpl(const DataType* query,
                 query_raw_norm += query[d] * query[d];
             }
         }
-
 
         // 1. pca
         if (pca_dim_ != this->original_dim_) {

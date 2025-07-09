@@ -66,6 +66,7 @@ TEST_CASE("RaBitQ Encode and Decode", "[ut][RaBitQuantizer]") {
         if (use_pca) {
             pca_dim = dim / 2;
         }
+        bool use_mrq = false;
         for (auto count : counts) {
             auto allocator = SafeAllocator::FactoryDefaultAllocator();
             RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR> quantizer(
@@ -75,13 +76,13 @@ TEST_CASE("RaBitQ Encode and Decode", "[ut][RaBitQuantizer]") {
                 quantizer, dim, count);
 
             RaBitQuantizer<MetricType::METRIC_TYPE_IP> quantizer_ip(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht, use_mrq,allocator.get());
 
             TestEncodeDecodeRaBitQ<RaBitQuantizer<MetricType::METRIC_TYPE_IP>>(
                 quantizer_ip, dim, count);
 
             RaBitQuantizer<MetricType::METRIC_TYPE_COSINE> quantizer_cos(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht,use_mrq, allocator.get());
 
             TestEncodeDecodeRaBitQ<RaBitQuantizer<MetricType::METRIC_TYPE_COSINE>>(
                 quantizer_cos, dim, count);
@@ -106,46 +107,46 @@ TEST_CASE("RaBitQ Compute", "[ut][RaBitQuantizer]") {
         if (dim < 900) {
             continue;
         }
+        bool use_mrq = false;
         for (auto count : counts) {
             auto allocator = SafeAllocator::FactoryDefaultAllocator();
             RaBitQuantizer<MetricType::METRIC_TYPE_COSINE> quantizer(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht,use_mrq, allocator.get());
 
-            TestComputer<RaBitQuantizer<MetricType::METRIC_TYPE_COSINE>,
-                         MetricType::METRIC_TYPE_COSINE>(quantizer,
-                                                        dim,
-                                                        count,
-                                                        numeric_error,
-                                                        related_error,
-                                                        true,
-                                                        unbounded_numeric_error_rate,
-                                                        unbounded_related_error_rate);
+            TestComputer<RaBitQuantizer<MetricType::METRIC_TYPE_COSINE>,MetricType::METRIC_TYPE_COSINE>(
+                                                        quantizer,
+                                                         dim,
+                                                         count,
+                                                         numeric_error,
+                                                         related_error,
+                                                         true,
+                                                         unbounded_numeric_error_rate,
+                                                         unbounded_related_error_rate);
             REQUIRE_THROWS(TestComputeCodes<RaBitQuantizer<MetricType::METRIC_TYPE_COSINE>,
                                             MetricType::METRIC_TYPE_COSINE>(
                 quantizer, dim, count, numeric_error, false));
 
-
             RaBitQuantizer<MetricType::METRIC_TYPE_IP> quantizer_ip(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht, use_mrq,allocator.get());
 
-            TestComputer<RaBitQuantizer<MetricType::METRIC_TYPE_IP>,
-                         MetricType::METRIC_TYPE_IP>(quantizer_ip,
-                                                        dim,
-                                                        count,
-                                                        numeric_error,
-                                                        related_error,
-                                                        true,
-                                                        unbounded_numeric_error_rate,
-                                                        unbounded_related_error_rate);
+            TestComputer<RaBitQuantizer<MetricType::METRIC_TYPE_IP>, MetricType::METRIC_TYPE_IP>(
+                quantizer_ip,
+                dim,
+                count,
+                numeric_error,
+                related_error,
+                true,
+                unbounded_numeric_error_rate,
+                unbounded_related_error_rate);
             REQUIRE_THROWS(TestComputeCodes<RaBitQuantizer<MetricType::METRIC_TYPE_IP>,
                                             MetricType::METRIC_TYPE_IP>(
                 quantizer_ip, dim, count, numeric_error, false));
 
             RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR> quantizer_l2(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht,use_mrq, allocator.get());
 
-            TestComputer<RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR>,
-                         MetricType::METRIC_TYPE_L2SQR>(quantizer_l2,
+            TestComputer<RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR>,MetricType::METRIC_TYPE_L2SQR>(
+                                                        quantizer_l2,
                                                         dim,
                                                         count,
                                                         numeric_error,
@@ -174,12 +175,13 @@ TEST_CASE("RaBitQ Serialize and Deserialize", "[ut][RaBitQuantizer]") {
         if (dim < 900) {
             continue;
         }
+        bool use_mrq =false;
         for (auto count : counts) {
             auto allocator = SafeAllocator::FactoryDefaultAllocator();
             RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR> quantizer1(
-                dim, dim, num_bits_per_dim, use_fht, false, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht, use_mrq, allocator.get());
             RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR> quantizer2(
-                dim, dim, num_bits_per_dim, use_fht, false, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht, use_mrq, allocator.get());
 
             TestSerializeAndDeserialize<RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR>,
                                         MetricType::METRIC_TYPE_L2SQR>(quantizer1,
@@ -192,35 +194,36 @@ TEST_CASE("RaBitQ Serialize and Deserialize", "[ut][RaBitQuantizer]") {
                                                                        unbounded_related_error_rate,
                                                                        true);
             RaBitQuantizer<MetricType::METRIC_TYPE_IP> quantizer_ip1(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht,use_mrq, allocator.get());
             RaBitQuantizer<MetricType::METRIC_TYPE_IP> quantizer_ip2(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht, use_mrq,allocator.get());
 
             TestSerializeAndDeserialize<RaBitQuantizer<MetricType::METRIC_TYPE_IP>,
                                         MetricType::METRIC_TYPE_IP>(quantizer_ip1,
-                                                                       quantizer_ip2,
-                                                                       dim,
-                                                                       count,
-                                                                       numeric_error,
-                                                                       related_error,
-                                                                       unbounded_numeric_error_rate,
-                                                                       unbounded_related_error_rate,
-                                                                       true);
+                                                                    quantizer_ip2,
+                                                                    dim,
+                                                                    count,
+                                                                    numeric_error,
+                                                                    related_error,
+                                                                    unbounded_numeric_error_rate,
+                                                                    unbounded_related_error_rate,
+                                                                    true);
             RaBitQuantizer<MetricType::METRIC_TYPE_COSINE> quantizer_cos1(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht,use_mrq, allocator.get());
             RaBitQuantizer<MetricType::METRIC_TYPE_COSINE> quantizer_cos2(
-                dim, dim, num_bits_per_dim, use_fht, allocator.get());
+                dim, dim, num_bits_per_dim, use_fht, use_mrq,allocator.get());
 
             TestSerializeAndDeserialize<RaBitQuantizer<MetricType::METRIC_TYPE_COSINE>,
-                                        MetricType::METRIC_TYPE_COSINE>(quantizer_cos1,
-                                                                       quantizer_cos2,
-                                                                       dim,
-                                                                       count,
-                                                                       numeric_error,
-                                                                       related_error,
-                                                                       unbounded_numeric_error_rate,
-                                                                       unbounded_related_error_rate,
-                                                                       true);
+                                        MetricType::METRIC_TYPE_COSINE>(
+                quantizer_cos1,
+                quantizer_cos2,
+                dim,
+                count,
+                numeric_error,
+                related_error,
+                unbounded_numeric_error_rate,
+                unbounded_related_error_rate,
+                true);
         }
     }
 }

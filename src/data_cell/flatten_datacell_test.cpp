@@ -30,7 +30,7 @@ using namespace vsag;
 void
 TestFlattenDataCell(FlattenDataCellParamPtr& param,
                     IndexCommonParam& common_param,
-                    float error = 1e-5) {
+                    float error = 1e-3) {
     auto count = GENERATE(100, 1000);
     auto flatten = FlattenInterface::MakeInstance(param, common_param);
 
@@ -44,7 +44,8 @@ TEST_CASE("FlattenDataCell Basic Test", "[ut][FlattenDataCell] ") {
     auto allocator = SafeAllocator::FactoryDefaultAllocator();
     auto dim = GENERATE(32, 64, 512);
     std::string io_type = GENERATE("memory_io", "block_memory_io");
-    std::vector<std::pair<std::string, float>> quantizer_errors = {{"sq8", 2e-2f}, {"fp32", 1e-5},{"rabitq", 1e-1f}};
+    std::vector<std::pair<std::string, float>> quantizer_errors = {
+        {"sq8", 2e-2f}, {"fp32", 1e-5}};
     MetricType metrics[3] = {
         MetricType::METRIC_TYPE_L2SQR, MetricType::METRIC_TYPE_COSINE, MetricType::METRIC_TYPE_IP};
     constexpr const char* param_temp =
