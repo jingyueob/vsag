@@ -291,7 +291,9 @@ RaBitQuantizer<metric>::RaBitQuantizer(int dim,
         this->code_size_ += ((sizeof(norm_type) + align_size - 1) / align_size) * align_size;
 
         query_offset_mrq_norm_ = this->query_code_size_;
+        this->query_code_size_ += ((sizeof(norm_type) + align_size - 1) / align_size) * align_size;
     }
+
     if constexpr (metric == MetricType::METRIC_TYPE_IP or
                   metric == MetricType::METRIC_TYPE_COSINE) {
         query_offset_raw_norm_ = this->query_code_size_;
