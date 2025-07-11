@@ -533,18 +533,19 @@ RaBitQuantizer<metric>::ComputeQueryBaseImpl(const uint8_t* query_codes,
         result += (query_mrq_norm_sqr + base_mrq_norm_sqr);
     }
     if constexpr (metric == MetricType::METRIC_TYPE_COSINE) {
-        if (is_approx_zero(quer_raw_norm) or is_approx_zero(base_raw_norm)){
+        if (is_approx_zero(quer_raw_norm) or is_approx_zero(base_raw_norm)) {
             result = 1;
         } else {
-            result = 1 - (quer_raw_norm * quer_raw_norm + base_raw_norm * base_raw_norm - result) * 0.5F /
-                         (quer_raw_norm * base_raw_norm);
+            result = 1 - (quer_raw_norm * quer_raw_norm + base_raw_norm * base_raw_norm - result) *
+                             0.5F / (quer_raw_norm * base_raw_norm);
         }
     }
     if constexpr (metric == MetricType::METRIC_TYPE_IP) {
-        if (is_approx_zero(quer_raw_norm) or is_approx_zero(base_raw_norm)){
+        if (is_approx_zero(quer_raw_norm) or is_approx_zero(base_raw_norm)) {
             result = 1;
         } else {
-            result = 1 - (quer_raw_norm * quer_raw_norm + base_raw_norm * base_raw_norm - result) * 0.5F;
+            result =
+                1 - (quer_raw_norm * quer_raw_norm + base_raw_norm * base_raw_norm - result) * 0.5F;
         }
     }
 
