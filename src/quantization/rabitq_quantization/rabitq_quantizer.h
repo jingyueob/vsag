@@ -380,6 +380,7 @@ RaBitQuantizer<metric>::EncodeOneImpl(const DataType* data, uint8_t* codes) cons
             raw_norm += data[d] * data[d];
         }
     }
+    raw_norm = std::sqrt(raw_norm);
     // 1. pca
     if (pca_dim_ != this->original_dim_) {
         pca_->Transform(data, pca_data.data());
@@ -535,11 +536,11 @@ RaBitQuantizer<metric>::ComputeQueryBaseImpl(const uint8_t* query_codes,
         if (is_approx_zero(quer_raw_norm) or is_approx_zero(base_raw_norm)){
             result = 1;
         }
-        result = 1 - (quer_raw_norm + base_raw_norm - result) * 0.5F /
-                         (std::sqrt(quer_raw_norm) * std::sqrt(base_raw_norm));
+        result = 1 - (quer_raw_norm * quer_raw_norm + base_raw_norm * base_raw_norm - result) * 0.5F /
+                         (quer_raw_norm * base_raw_norm);
     }
     if constexpr (metric == MetricType::METRIC_TYPE_IP) {
-        result = 1 - (quer_raw_norm + base_raw_norm - result) * 0.5F;
+        result = 1 - (quer_raw_norm * quer_raw_norm + base_raw_norm * base_raw_norm - result) * 0.5F;
     }
 
     return result;
@@ -696,7 +697,7 @@ RaBitQuantizer<metric>::ProcessQueryImpl(const DataType* query,
                 query_raw_norm += query[d] * query[d];
             }
         }
-
+        query_raw_norm = std::sqrt(query_raw_norm);
         // 1. pca
         if (pca_dim_ != this->original_dim_) {
             pca_->Transform(query, pca_data.data());
