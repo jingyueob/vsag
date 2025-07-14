@@ -1307,7 +1307,8 @@ BitNot(const uint8_t* x, const uint64_t num_byte, uint8_t* result) {
 #endif
 }
 
-void RotateOp(float* data, int idx, int dim_, int step) {
+void
+RotateOp(float* data, int idx, int dim_, int step) {
 #if defined(ENABLE_NEON)
     for (int i = idx; i < dim_; i += step * 2) {
         for (int j = 0; j < step; j += 4) {
@@ -1330,7 +1331,7 @@ FHTRotate(float* data, size_t dim_) {
     size_t n = dim_;
     size_t step = 1;
     while (step < n) {
-        if(step >= 4){
+        if (step >= 4) {
             neon::RotateOp(data, 0, dim_, step);
         } else {
             generic::RotateOp(data, 0, dim_, step);
@@ -1347,7 +1348,7 @@ VecRescale(float* data, size_t dim, float val) {
 #if defined(ENABLE_NEON)
     size_t i = 0;
     float32x4_t val_vec = vdupq_n_f32(val);
-    for(; i + 4 <= dim; i += 4){
+    for (; i + 4 <= dim; i += 4) {
         float32x4_t data_vec = vld1q_f32(&data[i]);
         float32x4_t result_vec = vmulq_f32(data_vec, val_vec);
         vst1q_f32(&data[i], result_vec);
@@ -1368,7 +1369,7 @@ KacsWalk(float* data, size_t len) {
     size_t offset = base + (len / 2);  // for odd dim
     size_t i = 0;
 
-    for(; i + 4 < len / 2; i += 4){
+    for (; i + 4 < len / 2; i += 4) {
         float32x4_t x = vld1q_f32(&data[i]);
         float32x4_t y = vld1q_f32(&data[i + offset]);
 
@@ -1389,7 +1390,7 @@ KacsWalk(float* data, size_t len) {
     if (base != 0 && len > 0) {
         data[len / 2] *= std::sqrt(2.0F);
     }
-#else 
+#else
     generic::KacsWalk(data, len);
 #endif
 }
