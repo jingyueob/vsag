@@ -215,7 +215,7 @@ TEST_CASE("SIMD test for rescale", "[ut][simd]") {
                 }
             }
             if (SimdStatus::SupportNEON()){
-                neno::VecRescale(sse_data, dim, 0.5);
+                neon::VecRescale(sse_data, dim, 0.5);
                 for(int i = 0; i < dim; i++){
                     REQUIRE(gt_data[i] - neno_data[i] < delta);
                 }
@@ -275,7 +275,7 @@ TEST_CASE("SIMD test for kacs_walk", "[ut][simd]") {
             }
             if (SimdStatus::SupportNEON()){
                 auto * neno_data = neno_datas.data() + i * dim;
-                neno::KacsWalk(sse_data, dim);
+                neon::KacsWalk(sse_data, dim);
                 for(int i = 0; i < dim; i++){
                     REQUIRE(gt_data[i] - neno_data[i] < delta);
                 }
