@@ -311,6 +311,12 @@ TestComputer(Quantizer<T>& quant,
     bool need_normalize = false;
     auto vecs = fixtures::generate_vectors(count, dim, need_normalize);
     auto queries = fixtures::generate_vectors(query_count, dim, need_normalize, 165);
+    for (int d = 0; d < dim; d++) {
+        vecs[d] = 0.0f;
+    }
+    for (int d = 0; d < dim; d++) {
+        queries[query_count * dim / 2 + d] = 0.0f;
+    }
     if (retrain) {
         quant.ReTrain(vecs.data(), count);
     }
