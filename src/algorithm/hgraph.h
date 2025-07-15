@@ -114,6 +114,15 @@ public:
                 const FilterPtr& filter,
                 int64_t limited_size = -1) const override;
 
+    [[nodiscard]] DatasetPtr
+    RangeSearch(const DatasetPtr& query,
+                float radius,
+                const std::string& parameters,
+                const FilterPtr& filter,
+                IteratorContext*& iter_ctx,
+                bool is_last_filter,
+                int64_t limited_size = -1) const override;
+
     void
     Serialize(StreamWriter& writer) const override;
 

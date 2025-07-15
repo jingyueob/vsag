@@ -651,6 +651,112 @@ HGraph::RangeSearch(const DatasetPtr& query,
     return std::move(dataset_results);
 }
 
+DatasetPtr
+HGraph::RangeSearch(const DatasetPtr& query,
+            float radius,
+            const std::string& parameters,
+            const FilterPtr& filter,
+            IteratorContext*& iter_ctx,
+            bool is_last_filter,
+            int64_t limited_size) const {
+    Allocator* search_allocator = allocator_;
+    std::shared_ptr<InnerIdWrapperFilter> ft = nullptr;
+    if (filter != nullptr) {
+        ft = std::make_shared<InnerIdWrapperFilter>(filter, *this->label_table_);
+    }  // todo
+    int64_t query_dim = query->GetDim();
+    if (data_type_ != DataTypes::DATA_TYPE_SPARSE) {
+        CHECK_ARGUMENT(
+            query_dim == dim_,
+            fmt::format("query.dim({}) must be equal to index.dim({})", query_dim, dim_));
+    }
+    // check radius
+    CHECK_ARGUMENT(radius >= 0, fmt::format("radius({}) must be greater equal than 0", radius))
+
+    // check query vector
+    CHECK_ARGUMENT(query->GetNumElements() == 1, "query dataset should contain 1 vector only");
+
+    // check limited_size
+    CHECK_ARGUMENT(limited_size != 0,
+                   fmt::format("limited_size({}) must not be equal to 0", limited_size));
+
+    auto params = HGraphSearchParameters::FromJson(parameters);
+
+    if (iter_ctx == nullptr) {
+        auto cur_count = this->bottom_graph_->TotalCount();
+        auto* new_ctx = new IteratorFilterContext();
+        if (auto ret = new_ctx->init(cur_count, params.ef_search, search_allocator);
+            not ret.has_value()) {
+            throw vsag::VsagException(ErrorType::INTERNAL_ERROR,
+                                      "failed to init IteratorFilterContext");
+        }
+        iter_ctx = new_ctx;
+    }
+    auto* iter_filter_ctx = static_cast<IteratorFilterContext*>(iter_ctx);
+    auto search_result =
+        DistanceHeap::MakeInstanceBySize<true, false>(search_allocator, limited_size);
+    const auto* raw_query = get_data(query);
+    if (is_last_filter) {
+        while (!iter_filter_ctx->Empty()) {
+            uint32_t cur_inner_id = iter_filter_ctx->GetTopID();
+            float cur_dist = iter_filter_ctx->GetTopDist();
+            search_result->Push(cur_dist, cur_inner_id);
+            iter_filter_ctx->PopDiscard();
+        }
+    } else {
+        InnerSearchParam search_param;
+        search_param.ep = this->entry_point_id_;
+        search_param.topk = 1;
+        search_param.ef = 1;
+        if (iter_filter_ctx->IsFirstUsed()) {
+            for (auto i = static_cast<int64_t>(this->route_graphs_.size() - 1); i >= 0; --i) {
+                auto result = this->search_one_graph(
+                    raw_query, this->route_graphs_[i], this->basic_flatten_codes_, search_param);
+                search_param.ep = result->Top().second;
+            }
+        }
+
+        search_param.ef = std::max(params.ef_search, limited_size);
+        search_param.is_inner_id_allowed = ft;
+        search_param.radius = radius;
+        search_param.search_mode = RANGE_SEARCH;
+        search_param.range_search_limit_size = static_cast<int>(limited_size);
+        search_result = this->search_one_graph(
+            raw_query, this->bottom_graph_, this->basic_flatten_codes_, search_param);
+    }
+
+    if (use_reorder_) {
+        this->reorder(raw_query, this->high_precise_codes_, search_result, limited_size);
+    }
+    if (limited_size > 0) {
+        while (search_result->Size() > limited_size) {
+            auto curr = search_result->Top();
+            iter_filter_ctx->AddDiscardNode(curr.first, curr.second);
+            search_result->Pop();
+        }
+    }
+
+    auto count = static_cast<const int64_t>(search_result->Size());
+    auto [dataset_results, dists, ids] = create_fast_dataset(count, allocator_);
+    char* extra_infos = nullptr;
+    if (extra_info_size_ > 0) {
+        extra_infos = (char*)allocator_->Allocate(extra_info_size_ * search_result->Size());
+        dataset_results->ExtraInfos(extra_infos);
+    }
+    for (int64_t j = count - 1; j >= 0; --j) {
+        dists[j] = search_result->Top().first;
+        ids[j] = this->label_table_->GetLabelById(search_result->Top().second);
+        iter_filter_ctx->SetPoint(search_result->Top().second);
+        if (extra_infos != nullptr) {
+            this->extra_infos_->GetExtraInfoById(search_result->Top().second,
+                                                 extra_infos + extra_info_size_ * j);
+        }
+        search_result->Pop();
+    }
+    iter_filter_ctx->SetOFFFirstUsed();
+    return std::move(dataset_results);
+    return  nullptr;
+}
 void
 HGraph::serialize_basic_info_v0_14(StreamWriter& writer) const {
     StreamWriter::WriteObj(writer, this->use_reorder_);

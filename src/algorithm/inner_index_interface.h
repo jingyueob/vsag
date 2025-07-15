@@ -163,6 +163,17 @@ public:
         return this->RangeSearch(query, radius, parameters, filter, limited_size);
     }
 
+    [[nodiscard]] virtual DatasetPtr
+    RangeSearch(const DatasetPtr& query,
+                float radius,
+                const std::string& parameters,
+                const FilterPtr& filter,
+                IteratorContext*& iter_ctx,
+                bool is_last_filter,
+                int64_t limited_size = -1)const {
+        throw VsagException(ErrorType::UNSUPPORTED_INDEX_OPERATION,
+    "Index doesn't support new filter");
+    }
     virtual Index::Checkpoint
     ContinueBuild(const DatasetPtr& base, const BinarySet& binary_set) {
         throw VsagException(ErrorType::UNSUPPORTED_INDEX_OPERATION,
