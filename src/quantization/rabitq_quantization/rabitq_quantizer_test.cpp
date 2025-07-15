@@ -102,7 +102,7 @@ TEST_CASE("RaBitQ Compute", "[ut][RaBitQuantizer]") {
         for (auto count : counts) {
             auto allocator = SafeAllocator::FactoryDefaultAllocator();
             RaBitQuantizer<MetricType::METRIC_TYPE_COSINE> quantizer(
-                dim, dim, num_bits_per_dim, use_fht,  allocator.get());
+                dim, dim, num_bits_per_dim, use_fht, allocator.get());
 
             TestComputer<RaBitQuantizer<MetricType::METRIC_TYPE_COSINE>,
                          MetricType::METRIC_TYPE_COSINE>(quantizer,
@@ -136,11 +136,8 @@ TEST_CASE("RaBitQ Compute", "[ut][RaBitQuantizer]") {
             RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR> quantizer_l2(
                 dim, dim, num_bits_per_dim, use_fht, allocator.get());
             TestComputer<RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR>,
-                        MetricType::METRIC_TYPE_L2SQR>(quantizer_l2,
-                                                    dim,
-                                                    count,
-                                                    numeric_error,
-                                                    unbounded_related_error_rate);
+                         MetricType::METRIC_TYPE_L2SQR>(
+                quantizer_l2, dim, count, numeric_error, unbounded_related_error_rate);
             REQUIRE_THROWS(TestComputeCodes<RaBitQuantizer<MetricType::METRIC_TYPE_L2SQR>,
                                             MetricType::METRIC_TYPE_L2SQR>(
                 quantizer_l2, dim, count, numeric_error, false));
