@@ -741,7 +741,10 @@ TEST_CASE_PERSISTENT_FIXTURE(fixtures::HgraphTestIndex,
     for (auto& [base_quantization_str, recall] : test_cases) {
         INFO(fmt::format("quantizer str: {}", base_quantization_str));
         if (IsRaBitQ(base_quantization_str)) {
+<<<<<<< HEAD
 
+=======
+>>>>>>> e0516ac (fmt)
         }
         vsag::Options::Instance().set_block_size_limit(size);
         auto param = GenerateHGraphBuildParametersString(metric_type, dim, base_quantization_str);

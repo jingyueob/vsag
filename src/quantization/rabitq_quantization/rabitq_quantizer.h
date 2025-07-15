@@ -192,7 +192,6 @@ template <MetricType metric>
 RaBitQuantizer<metric>::RaBitQuantizer(
     int dim, uint64_t pca_dim, uint64_t num_bits_per_dim_query, bool use_fht, Allocator* allocator)
     : Quantizer<RaBitQuantizer<metric>>(dim, allocator) {
-
     // dim
     pca_dim_ = pca_dim;
     original_dim_ = dim;
