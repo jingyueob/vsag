@@ -722,7 +722,7 @@ HGraph::RangeSearch(const DatasetPtr& query,
         search_param.search_mode = RANGE_SEARCH;
         search_param.range_search_limit_size = static_cast<int>(limited_size);
         search_result = this->search_one_graph(
-            raw_query, this->bottom_graph_, this->basic_flatten_codes_, search_param);
+            raw_query, this->bottom_graph_, this->basic_flatten_codes_, search_param, iter_filter_ctx);
     }
 
     if (use_reorder_) {
