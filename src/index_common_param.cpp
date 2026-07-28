@@ -39,16 +39,19 @@ fill_datatype(IndexCommonParam& result, const JsonType& datatype_obj) {
         result.data_type_ = DataTypes::DATA_TYPE_INT8;
     } else if (datatype == DATATYPE_SPARSE) {
         result.data_type_ = DataTypes::DATA_TYPE_SPARSE;
+    } else if (datatype == DATATYPE_BINARY) {
+        result.data_type_ = DataTypes::DATA_TYPE_BINARY;
     } else {
         throw VsagException(
             ErrorType::INVALID_ARGUMENT,
-            fmt::format("parameters[{}] must be one of [{}, {}, {}, {}, {}], now is {}",
+            fmt::format("parameters[{}] must be one of [{}, {}, {}, {}, {}, {}], now is {}",
                         PARAMETER_DTYPE,
                         DATATYPE_FLOAT32,
                         DATATYPE_FLOAT16,
                         DATATYPE_BFLOAT16,
                         DATATYPE_INT8,
                         DATATYPE_SPARSE,
+                        DATATYPE_BINARY,
                         datatype));
     }
 }
@@ -86,13 +89,16 @@ fill_metrictype(IndexCommonParam& result, const JsonType& metric_obj) {
         result.metric_ = MetricType::METRIC_TYPE_IP;
     } else if (metric == METRIC_COSINE) {
         result.metric_ = MetricType::METRIC_TYPE_COSINE;
+    } else if (metric == METRIC_HAMMING) {
+        result.metric_ = MetricType::METRIC_TYPE_HAMMING;
     } else {
         throw VsagException(ErrorType::INVALID_ARGUMENT,
-                            fmt::format("parameters[{}] must in [{}, {}, {}], now is {}",
+                            fmt::format("parameters[{}] must in [{}, {}, {}, {}], now is {}",
                                         PARAMETER_METRIC_TYPE,
                                         METRIC_L2,
                                         METRIC_IP,
                                         METRIC_COSINE,
+                                        METRIC_HAMMING,
                                         metric));
     }
 }
@@ -160,6 +166,14 @@ IndexCommonParam::CheckAndCreate(JsonType& params, const std::shared_ptr<Resourc
         }
         result.dim_ = MAX_DIM_SPARSE;
     }
+
+    if (result.data_type_ == DataTypes::DATA_TYPE_BINARY) {
+        CHECK_ARGUMENT(result.dim_ % 8 == 0,
+                       "binary dimension must be a positive multiple of 8");
+    }
+    CHECK_ARGUMENT((result.data_type_ == DataTypes::DATA_TYPE_BINARY) ==
+                       (result.metric_ == MetricType::METRIC_TYPE_HAMMING),
+                   "binary dtype must use hamming and hamming metric must use binary dtype");
 
     if (params.Contains(EXTRA_INFO_SIZE)) {
         fill_extra_info_size(result, params[EXTRA_INFO_SIZE]);

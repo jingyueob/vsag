@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -510,6 +511,28 @@ public:
      */
     virtual const std::string*
     GetSourceID() const = 0;
+
+    /**
+     * @brief Sets the packed binary vector array for the dataset.
+     *
+     * @param vectors Pointer to packed binary vectors. Each vector occupies dim / 8 bytes.
+     * @return DatasetPtr A shared pointer to the dataset with updated binary vectors.
+     */
+    virtual DatasetPtr
+    BinaryVectors(const uint8_t* vectors) {
+        (void)vectors;
+        throw std::runtime_error("binary vectors are unsupported by this Dataset implementation");
+    }
+
+    /**
+     * @brief Retrieves the packed binary vector array of the dataset.
+     *
+     * @return const uint8_t* Pointer to packed binary vectors.
+     */
+    virtual const uint8_t*
+    GetBinaryVectors() const {
+        return nullptr;
+    }
 };
 
 };  // namespace vsag

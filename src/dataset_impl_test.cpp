@@ -15,6 +15,8 @@
 
 #include "dataset_impl.h"
 
+#include <array>
+
 #include "impl/allocator/default_allocator.h"
 #include "unittest.h"
 #include "vsag/dataset.h"
@@ -842,5 +844,73 @@ TEST_CASE("Dataset MultiVector DeepCopy Test", "[ut][dataset]") {
         REQUIRE(dst_mv[0].len_ == 0);
         REQUIRE(dst_mv[0].vectors_ == nullptr);
         REQUIRE(dst_mv[1].len_ == dataset->GetMultiVectors()[1].len_);
+    }
+}
+
+TEST_CASE("Dataset Binary Vector Test", "[ut][dataset][binary]") {
+    constexpr int64_t dim = 16;
+
+    SECTION("setter and getter") {
+        std::array<uint8_t, 4> bytes{0x00, 0xff, 0x12, 0x34};
+        auto dataset = vsag::Dataset::Make()
+                           ->Dim(dim)
+                           ->NumElements(2)
+                           ->BinaryVectors(bytes.data())
+                           ->Owner(false);
+
+        REQUIRE(dataset->GetBinaryVectors() == bytes.data());
+    }
+
+    SECTION("deep copy uses packed byte length") {
+        std::array<uint8_t, 4> bytes{0x00, 0xff, 0x12, 0x34};
+        auto dataset = vsag::Dataset::Make()
+                           ->Dim(dim)
+                           ->NumElements(2)
+                           ->BinaryVectors(bytes.data())
+                           ->Owner(false);
+
+        auto copy = dataset->DeepCopy();
+        REQUIRE(copy->GetBinaryVectors() != bytes.data());
+        REQUIRE(std::memcmp(copy->GetBinaryVectors(), bytes.data(), bytes.size()) == 0);
+    }
+
+    SECTION("append uses packed byte length") {
+        auto* initial = new uint8_t[2]{0x00, 0xff};
+        std::array<uint8_t, 2> appended{0x12, 0x34};
+        auto dataset = vsag::Dataset::Make()
+                           ->Dim(dim)
+                           ->NumElements(1)
+                           ->BinaryVectors(initial)
+                           ->Owner(true, nullptr);
+        auto other = vsag::Dataset::Make()
+                         ->Dim(dim)
+                         ->NumElements(1)
+                         ->BinaryVectors(appended.data())
+                         ->Owner(false);
+
+        dataset->Append(other);
+
+        const std::array<uint8_t, 4> expected{0x00, 0xff, 0x12, 0x34};
+        REQUIRE(dataset->GetNumElements() == 2);
+        REQUIRE(std::memcmp(dataset->GetBinaryVectors(), expected.data(), expected.size()) == 0);
+    }
+
+    SECTION("invalid dimension is rejected by deep copy and append") {
+        auto* bytes = new uint8_t[1]{0xff};
+        auto dataset = vsag::Dataset::Make()
+                           ->Dim(7)
+                           ->NumElements(1)
+                           ->BinaryVectors(bytes)
+                           ->Owner(true, nullptr);
+        std::array<uint8_t, 1> appended{0x00};
+        auto other = vsag::Dataset::Make()
+                         ->Dim(7)
+                         ->NumElements(1)
+                         ->BinaryVectors(appended.data())
+                         ->Owner(false);
+
+        REQUIRE_THROWS(dataset->DeepCopy());
+        REQUIRE_THROWS(dataset->Append(other));
+        REQUIRE(dataset->GetBinaryVectors() == bytes);
     }
 }

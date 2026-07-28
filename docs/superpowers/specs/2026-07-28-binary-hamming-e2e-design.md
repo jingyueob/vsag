@@ -18,6 +18,8 @@
   - 复用仓库已有的 HDF5 1.14.4 构建产物，不增加系统依赖。
 - `scripts/testing/test_binary_hamming_e2e.sh`
   - 配置并按目标构建过滤单元测试和端到端程序。
+  - 使用独立的 `build-e2e/` Release 构建目录，避免覆盖日常 Debug 构建，并使近
+    100 万点的 HNSW 构建耗时可接受。
   - 只运行 `build/tests/unittests`，不执行没有匹配用例的 `functests` 和
     `tests_mockimpl`。
   - 运行 C++ 端到端程序，并把可选的第一个参数作为 HDF5 路径传入。

@@ -13,8 +13,30 @@
 | 字段 | 取值 | 说明 |
 |------|------|------|
 | `dim` | 正整数 | 向量维度，构建后不可更改 |
-| `dtype` | `float32` / `fp16` / `bf16` / `int8` | 向量数据类型，决定索引内部表示 |
-| `metric_type` | `l2` / `ip` / `cosine` | 距离度量 |
+| `dtype` | `float32` / `fp16` / `bf16` / `int8` / `binary` | 向量数据类型；`binary` 当前仅支持 HNSW |
+| `metric_type` | `l2` / `ip` / `cosine` / `hamming` | 距离度量；`hamming` 必须配合 `dtype: binary` |
+
+使用 `dtype: "binary"` 时，`dim` 表示逻辑 bit 数，必须大于 0 且能被 8 整除。每条向量以
+`dim / 8` 个压缩字节传入。
+
+## HNSW
+
+普通 HNSW 支持 packed binary 向量和 Hamming 距离：
+
+```json
+{
+    "dim": 128,
+    "dtype": "binary",
+    "metric_type": "hamming",
+    "hnsw": {
+        "max_degree": 16,
+        "ef_construction": 100
+    }
+}
+```
+
+binary 路径支持构建、追加、搜索、更新、序列化和原始向量读取；HNSW Merge、Pretrain 与
+量化路径暂不支持 binary。其他索引类型会拒绝 `dtype: "binary"`。
 
 ## HGraph
 

@@ -171,6 +171,7 @@ HNSW::add(const DatasetPtr& base) {
                 one_base->Ids(ids + i)
                     ->Float32Vectors((float*)((char*)vectors + data_size * i))
                     ->Int8Vectors((int8_t*)((char*)vectors + data_size * i))
+                    ->BinaryVectors((uint8_t*)((char*)vectors + data_size * i))
                     ->NumElements(1)
                     ->Owner(false);
 
@@ -954,6 +955,11 @@ HNSW::pretrain(const std::vector<int64_t>& base_tag_ids,
             ErrorType::WRONG_STATUS, "index is in the wrong status({})", PrintStatus());
     }
 
+    if (type_ == DataTypes::DATA_TYPE_BINARY) {
+        LOG_ERROR_AND_RETURNS(ErrorType::UNSUPPORTED_INDEX_OPERATION,
+                              "binary hnsw does not support pretrain");
+    }
+
     if (not use_conjugate_graph_) {
         LOG_ERROR_AND_RETURNS(ErrorType::UNSUPPORTED_INDEX_OPERATION,
                               "no conjugate graph used for pretrain");
@@ -1092,8 +1098,10 @@ HNSW::init_feature_list() {
     feature_list_.SetFeatures({IndexFeature::SUPPORT_CAL_DISTANCE_BY_ID,
                                IndexFeature::SUPPORT_CHECK_ID_EXIST,
                                IndexFeature::SUPPORT_GET_RAW_VECTOR_BY_IDS,
-                               IndexFeature::SUPPORT_MERGE_INDEX,
                                IndexFeature::SUPPORT_ESTIMATE_MEMORY});
+    if (type_ != DataTypes::DATA_TYPE_BINARY) {
+        feature_list_.SetFeature(IndexFeature::SUPPORT_MERGE_INDEX);
+    }
 }
 
 bool
@@ -1161,6 +1169,11 @@ HNSW::merge(const std::vector<MergeUnit>& merge_units) {
             ErrorType::WRONG_STATUS, "index is in the wrong status({})", PrintStatus());
     }
 
+    if (type_ == DataTypes::DATA_TYPE_BINARY) {
+        LOG_ERROR_AND_RETURNS(ErrorType::UNSUPPORTED_INDEX_OPERATION,
+                              "binary hnsw does not support merge");
+    }
+
     if (merge_units.empty()) {
         return {};
     }
@@ -1203,7 +1216,7 @@ HNSW::merge(const std::vector<MergeUnit>& merge_units) {
 }
 
 tl::expected<float, Error>
-HNSW::calc_distance_by_id(const float* vector, int64_t id) const {
+HNSW::calc_distance_by_id(const void* vector, int64_t id) const {
     std::shared_lock status_lock(index_status_mutex_);
     std::shared_lock lock(rw_mutex_);
     if (not this->IsValidStatus()) {
@@ -1211,6 +1224,23 @@ HNSW::calc_distance_by_id(const float* vector, int64_t id) const {
             ErrorType::WRONG_STATUS, "index is in the wrong status({})", PrintStatus());
     }
     return alg_hnsw_->getDistanceByLabel(id, vector);
+}
+
+tl::expected<float, Error>
+HNSW::calc_distance_by_id(const DatasetPtr& vector, int64_t id) const {
+    CHECK_ARGUMENT(vector != nullptr, "query dataset cannot be null");
+    CHECK_ARGUMENT(vector->GetNumElements() == 1, "query dataset should contain 1 vector only");
+    CHECK_ARGUMENT(vector->GetDim() == dim_,
+                   fmt::format("query.dim({}) must be equal to index.dim({})",
+                               vector->GetDim(),
+                               dim_));
+
+    void* vector_data = nullptr;
+    uint64_t data_size = 0;
+    get_vectors(type_, dim_, vector, &vector_data, &data_size);
+    CHECK_ARGUMENT(vector_data != nullptr, "query dataset does not contain vector data");
+    CHECK_ARGUMENT(data_size > 0, "query vector data size must be greater than 0");
+    return this->calc_distance_by_id(vector_data, id);
 }
 
 tl::expected<DatasetPtr, Error>
@@ -1253,17 +1283,21 @@ HNSW::get_vectors_by_id(const int64_t* ids, int64_t count, Allocator* specified_
     vectors->NumElements(count)->Dim(dim_)->Owner(/*auto release=*/not has_specified_allocator,
                                                   allocator);
 
-    uint32_t data_size = 0;
+    uint64_t data_size = 0;
     if (type_ == DataTypes::DATA_TYPE_INT8) {
         data_size = dim_;
+    } else if (type_ == DataTypes::DATA_TYPE_BINARY) {
+        data_size = static_cast<uint64_t>(dim_) / 8;
     } else {
-        data_size = dim_ * 4;
+        data_size = static_cast<uint64_t>(dim_) * sizeof(float);
     }
 
     auto* vectors_blob = allocator->Allocate(data_size * count);
 
     if (type_ == DataTypes::DATA_TYPE_INT8) {
         vectors->Int8Vectors((int8_t*)vectors_blob);
+    } else if (type_ == DataTypes::DATA_TYPE_BINARY) {
+        vectors->BinaryVectors((uint8_t*)vectors_blob);
     } else {
         vectors->Float32Vectors((float*)vectors_blob);
     }
@@ -1271,7 +1305,7 @@ HNSW::get_vectors_by_id(const int64_t* ids, int64_t count, Allocator* specified_
     for (auto i = 0; i < count; i++) {
         try {
             alg_hnsw_->copyDataByLabel(ids[i],
-                                       (char*)vectors_blob + static_cast<size_t>(i * data_size));
+                                       (char*)vectors_blob + static_cast<uint64_t>(i) * data_size);
         } catch (std::runtime_error& e) {
             throw std::runtime_error(
                 fmt::format("fail to get vector by id({}): {}, ", ids[i], e.what()));

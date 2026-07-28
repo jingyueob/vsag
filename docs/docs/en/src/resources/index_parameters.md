@@ -14,8 +14,31 @@ Every index requires these top-level fields at build time:
 | Field | Values | Description |
 |-------|--------|-------------|
 | `dim` | positive integer | Vector dimensionality; cannot change after build |
-| `dtype` | `float32` / `fp16` / `bf16` / `int8` | Vector data type; determines internal representation |
-| `metric_type` | `l2` / `ip` / `cosine` | Distance metric |
+| `dtype` | `float32` / `fp16` / `bf16` / `int8` / `binary` | Vector data type; `binary` is currently limited to HNSW |
+| `metric_type` | `l2` / `ip` / `cosine` / `hamming` | Distance metric; `hamming` requires `dtype: binary` |
+
+For `dtype: "binary"`, `dim` is the logical number of bits. It must be positive and divisible by
+8. Each vector is supplied as `dim / 8` packed bytes.
+
+## HNSW
+
+Ordinary HNSW supports packed binary vectors with Hamming distance:
+
+```json
+{
+    "dim": 128,
+    "dtype": "binary",
+    "metric_type": "hamming",
+    "hnsw": {
+        "max_degree": 16,
+        "ef_construction": 100
+    }
+}
+```
+
+The binary path supports build, add, search, update, serialization, and raw-vector retrieval.
+HNSW merge, pretrain, and quantization paths do not support binary vectors. Other index types
+reject `dtype: "binary"`.
 
 ## HGraph
 

@@ -76,6 +76,12 @@ create_registered_index(const std::string& index_name,
                               "failed to create index(internal): null creator for ",
                               normalized_name);
     }
+    if (index_common_params.data_type_ == DataTypes::DATA_TYPE_BINARY &&
+        normalized_name != INDEX_HNSW) {
+        return tl::unexpected(
+            Error(ErrorType::UNSUPPORTED_INDEX_OPERATION,
+                  "binary dtype is supported only by the hnsw index"));
+    }
     return creator(parsed_params, index_common_params);
 }
 

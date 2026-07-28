@@ -80,6 +80,17 @@ DatasetHandler::GetInt8Vectors() const {
 }
 
 DatasetHandler*
+DatasetHandler::BinaryVectors(const uint8_t* vectors) {
+    dataset_->BinaryVectors(vectors);
+    return this;
+}
+
+const uint8_t*
+DatasetHandler::GetBinaryVectors() const {
+    return dataset_->GetBinaryVectors();
+}
+
+DatasetHandler*
 DatasetHandler::Float32Vectors(const float* vectors) {
     dataset_->Float32Vectors(vectors);
     return this;

@@ -15,6 +15,8 @@
 
 #include "hnsw.h"
 
+#include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <memory>
 #include <new>
@@ -85,6 +87,117 @@ TEST_CASE("build & add", "[ut][hnsw]") {
         REQUIRE_FALSE(result.has_value());
         REQUIRE(result.error().type == ErrorType::INVALID_ARGUMENT);
     }
+}
+
+TEST_CASE("binary hamming hnsw operations", "[ut][hnsw][binary][hamming]") {
+    constexpr int64_t dim = 16;
+    IndexCommonParam common_param;
+    common_param.dim_ = dim;
+    common_param.data_type_ = DataTypes::DATA_TYPE_BINARY;
+    common_param.metric_ = MetricType::METRIC_TYPE_HAMMING;
+    common_param.allocator_ = SafeAllocator::FactoryDefaultAllocator();
+
+    auto hnsw_params = parse_hnsw_params(common_param);
+    auto index = std::make_shared<HNSW>(hnsw_params, common_param);
+    REQUIRE(index->InitMemorySpace().has_value());
+
+    std::array<int64_t, 4> ids{10, 20, 30, 40};
+    std::array<uint8_t, 8> vectors{
+        0x00, 0x00, 0x03, 0x0f, 0xff, 0xff, 0xf0, 0x0f};
+    auto base = Dataset::Make()
+                    ->Dim(dim)
+                    ->NumElements(static_cast<int64_t>(ids.size()))
+                    ->Ids(ids.data())
+                    ->BinaryVectors(vectors.data())
+                    ->Owner(false);
+    REQUIRE(index->Build(base).has_value());
+
+    JsonType search_params;
+    search_params["hnsw"]["ef_search"].SetInt(100);
+    std::array<uint8_t, 2> query_bytes{0x03, 0x0f};
+    auto query = Dataset::Make()
+                     ->Dim(dim)
+                     ->NumElements(1)
+                     ->BinaryVectors(query_bytes.data())
+                     ->Owner(false);
+
+    auto knn = index->KnnSearch(query, 1, search_params.Dump());
+    REQUIRE(knn.has_value());
+    REQUIRE(knn.value()->GetIds()[0] == 20);
+    REQUIRE(knn.value()->GetDistances()[0] == 0.0F);
+
+    auto range = index->RangeSearch(query, 6.0F, search_params.Dump());
+    REQUIRE(range.has_value());
+    REQUIRE(range.value()->GetDim() == 3);
+    std::vector<int64_t> range_ids(range.value()->GetIds(),
+                                   range.value()->GetIds() + range.value()->GetDim());
+    std::sort(range_ids.begin(), range_ids.end());
+    REQUIRE((range_ids == std::vector<int64_t>{10, 20, 40}));
+
+    auto exact_distance = index->CalcDistanceById(query, 20);
+    REQUIRE(exact_distance.has_value());
+    REQUIRE(exact_distance.value() == 0.0F);
+    auto known_distance = index->CalcDistanceById(query, 10);
+    REQUIRE(known_distance.has_value());
+    REQUIRE(known_distance.value() == 6.0F);
+    REQUIRE_FALSE(index->CalcDistanceById(query, 999).has_value());
+
+    int64_t add_id = 50;
+    std::array<uint8_t, 2> add_bytes{0x01, 0x01};
+    auto added = Dataset::Make()
+                     ->Dim(dim)
+                     ->NumElements(1)
+                     ->Ids(&add_id)
+                     ->BinaryVectors(add_bytes.data())
+                     ->Owner(false);
+    REQUIRE(index->Add(added).has_value());
+    auto add_query = Dataset::Make()
+                         ->Dim(dim)
+                         ->NumElements(1)
+                         ->BinaryVectors(add_bytes.data())
+                         ->Owner(false);
+    auto added_knn = index->KnnSearch(add_query, 1, search_params.Dump());
+    REQUIRE(added_knn.has_value());
+    REQUIRE(added_knn.value()->GetIds()[0] == add_id);
+
+    std::array<uint8_t, 2> update_bytes{0xaa, 0x55};
+    auto updated = Dataset::Make()
+                       ->Dim(dim)
+                       ->NumElements(1)
+                       ->BinaryVectors(update_bytes.data())
+                       ->Owner(false);
+    REQUIRE(index->UpdateVector(50, updated, true).value());
+    auto update_query = Dataset::Make()
+                            ->Dim(dim)
+                            ->NumElements(1)
+                            ->BinaryVectors(update_bytes.data())
+                            ->Owner(false);
+    auto updated_knn = index->KnnSearch(update_query, 1, search_params.Dump());
+    REQUIRE(updated_knn.has_value());
+    REQUIRE(updated_knn.value()->GetIds()[0] == add_id);
+
+    auto raw = index->GetRawVectorByIds(&add_id, 1);
+    REQUIRE(raw.has_value());
+    REQUIRE(raw.value()->GetBinaryVectors() != nullptr);
+    REQUIRE(std::memcmp(raw.value()->GetBinaryVectors(), update_bytes.data(), 2) == 0);
+
+    auto binary_set = index->Serialize();
+    REQUIRE(binary_set.has_value());
+    auto restored = std::make_shared<HNSW>(parse_hnsw_params(common_param), common_param);
+    REQUIRE(restored->Deserialize(binary_set.value()).has_value());
+    auto restored_knn = restored->KnnSearch(update_query, 1, search_params.Dump());
+    REQUIRE(restored_knn.has_value());
+    REQUIRE(restored_knn.value()->GetIds()[0] == add_id);
+    REQUIRE(restored_knn.value()->GetDistances()[0] == 0.0F);
+
+    auto pretrain = index->Pretrain({10}, 1, search_params.Dump());
+    REQUIRE_FALSE(pretrain.has_value());
+    REQUIRE(pretrain.error().type == ErrorType::UNSUPPORTED_INDEX_OPERATION);
+
+    REQUIRE_FALSE(index->CheckFeature(IndexFeature::SUPPORT_MERGE_INDEX));
+    auto merge = index->Merge({});
+    REQUIRE_FALSE(merge.has_value());
+    REQUIRE(merge.error().type == ErrorType::UNSUPPORTED_INDEX_OPERATION);
 }
 
 TEST_CASE("build with allocator", "[ut][hnsw]") {

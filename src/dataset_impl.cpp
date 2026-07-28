@@ -222,6 +222,7 @@ DatasetImpl::~DatasetImpl() {  // NOLINT
         allocator_->Deallocate(void_ptr(DatasetImpl::GetIds()));
         allocator_->Deallocate(void_ptr(DatasetImpl::GetDistances()));
         allocator_->Deallocate(void_ptr(DatasetImpl::GetInt8Vectors()));
+        allocator_->Deallocate(void_ptr(DatasetImpl::GetBinaryVectors()));
         allocator_->Deallocate(void_ptr(DatasetImpl::GetFloat16Vectors()));
         allocator_->Deallocate(void_ptr(DatasetImpl::GetFloat32Vectors()));
         allocator_->Deallocate(void_ptr(DatasetImpl::GetExtraInfos()));
@@ -255,6 +256,7 @@ DatasetImpl::~DatasetImpl() {  // NOLINT
         delete[] DatasetImpl::GetIds();
         delete[] DatasetImpl::GetDistances();
         delete[] DatasetImpl::GetInt8Vectors();
+        delete[] DatasetImpl::GetBinaryVectors();
         delete[] DatasetImpl::GetFloat16Vectors();
         delete[] DatasetImpl::GetFloat32Vectors();
         delete[] DatasetImpl::GetExtraInfos();
@@ -321,6 +323,15 @@ DatasetImpl::DeepCopy(Allocator* allocator) const {
     if (this->GetInt8Vectors() != nullptr) {
         copy_dataset->Int8Vectors(
             allocate_and_copy(this->GetInt8Vectors(), num_elements * dim, allocator_ref));
+    }
+    if (this->GetBinaryVectors() != nullptr) {
+        if (dim <= 0 || dim % 8 != 0) {
+            throw VsagException(ErrorType::INVALID_ARGUMENT,
+                                "binary dimension must be a positive multiple of 8");
+        }
+        const uint64_t bytes_per_vector = static_cast<uint64_t>(dim) / 8;
+        copy_dataset->BinaryVectors(allocate_and_copy(
+            this->GetBinaryVectors(), num_elements * bytes_per_vector, allocator_ref));
     }
     if (this->GetFloat32Vectors() != nullptr) {
         copy_dataset->Float32Vectors(
@@ -417,6 +428,10 @@ DatasetImpl::Append(const DatasetPtr& other) {
     auto old_num_elements = this->GetNumElements();
     auto new_num_elements = other->GetNumElements();
     auto dim = this->GetDim();
+    if (this->GetBinaryVectors() != nullptr && (dim <= 0 || dim % 8 != 0)) {
+        throw VsagException(ErrorType::INVALID_ARGUMENT,
+                            "binary dimension must be a positive multiple of 8");
+    }
 
     // check paths
     if (this->data_.find(DATASET_PATHS) != this->data_.end() && other->GetPaths() == nullptr) {
@@ -502,6 +517,7 @@ DatasetImpl::Append(const DatasetPtr& other) {
     APPEND_DATA(IDS, int64_t*, Ids, 1);
     APPEND_DATA(DISTS, float*, Distances, dim);
     APPEND_DATA(INT8_VECTORS, int8_t*, Int8Vectors, dim);
+    APPEND_DATA(BINARY_VECTORS, uint8_t*, BinaryVectors, dim / 8);
     APPEND_DATA(FLOAT16_VECTORS, uint16_t*, Float16Vectors, dim);
     APPEND_DATA(FLOAT32_VECTORS, float*, Float32Vectors, dim);
     APPEND_DATA(VECTOR_COUNTS, uint32_t*, VectorCounts, 1);

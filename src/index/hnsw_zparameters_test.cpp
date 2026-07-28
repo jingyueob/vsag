@@ -34,6 +34,47 @@ TEST_CASE("create hnsw with correct parameter", "[ut][hnsw]") {
     vsag::HnswParameters::FromJson(parsed_params, common_param);
 }
 
+TEST_CASE("create binary hnsw with hamming parameter", "[ut][hnsw][binary][hamming]") {
+    vsag::IndexCommonParam common_param;
+    common_param.dim_ = 16;
+    common_param.data_type_ = vsag::DataTypes::DATA_TYPE_BINARY;
+    common_param.metric_ = vsag::MetricType::METRIC_TYPE_HAMMING;
+    auto parsed_params = vsag::JsonType::Parse(R"(
+        {
+            "max_degree": 8,
+            "ef_construction": 100
+        }
+    )");
+
+    auto params = vsag::HnswParameters::FromJson(parsed_params, common_param);
+    REQUIRE(params.type == vsag::DataTypes::DATA_TYPE_BINARY);
+    REQUIRE(params.space != nullptr);
+    REQUIRE(params.space->get_data_size() == 2);
+
+    const uint8_t lhs[2]{0x00, 0x00};
+    const uint8_t rhs[2]{0x03, 0x0f};
+    REQUIRE(params.space->get_dist_func()(
+                lhs, rhs, params.space->get_dist_func_param()) == 6.0F);
+}
+
+TEST_CASE("reject invalid direct binary hnsw parameters", "[ut][hnsw][binary][hamming]") {
+    auto parsed_params = vsag::JsonType::Parse(R"(
+        {
+            "max_degree": 8,
+            "ef_construction": 100
+        }
+    )");
+    vsag::IndexCommonParam common_param;
+    common_param.dim_ = 16;
+    common_param.data_type_ = vsag::DataTypes::DATA_TYPE_BINARY;
+    common_param.metric_ = vsag::MetricType::METRIC_TYPE_L2SQR;
+    REQUIRE_THROWS(vsag::HnswParameters::FromJson(parsed_params, common_param));
+
+    common_param.dim_ = 7;
+    common_param.metric_ = vsag::MetricType::METRIC_TYPE_HAMMING;
+    REQUIRE_THROWS(vsag::HnswParameters::FromJson(parsed_params, common_param));
+}
+
 TEST_CASE("create hnsw with wrong parameter", "[ut][hnsw]") {
     vsag::IndexCommonParam common_param;
     common_param.dim_ = 128;

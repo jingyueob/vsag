@@ -73,6 +73,12 @@ public:
     GetInt8Vectors() const;
 
     DatasetHandler*
+    BinaryVectors(const uint8_t* vectors);
+
+    const uint8_t*
+    GetBinaryVectors() const;
+
+    DatasetHandler*
     Float32Vectors(const float* vectors);
 
     const float*

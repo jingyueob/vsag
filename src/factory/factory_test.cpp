@@ -24,7 +24,7 @@
 #include "unittest.h"
 #include "vsag/errors.h"
 
-TEST_CASE("Create Index with Full Parameters", "[ut][factory]") {
+TEST_CASE("Create Index with Full Parameters", "[ut][factory][binary][hamming]") {
     vsag::logger::set_level(vsag::logger::level::debug);
 
     SECTION("hnsw") {
@@ -61,6 +61,43 @@ TEST_CASE("Create Index with Full Parameters", "[ut][factory]") {
 
         auto index = vsag::Factory::CreateIndex("diskann", parameters.Dump());
         REQUIRE(index.has_value());
+    }
+
+    SECTION("binary hamming hnsw") {
+        auto parameters = vsag::JsonType::Parse(R"(
+        {
+            "dtype": "binary",
+            "metric_type": "hamming",
+            "dim": 16,
+            "hnsw": {
+                "max_degree": 8,
+                "ef_construction": 100
+            }
+        }
+        )");
+
+        auto index = vsag::Factory::CreateIndex("hnsw", parameters.Dump());
+        REQUIRE(index.has_value());
+    }
+
+    SECTION("binary hamming is restricted to hnsw") {
+        auto parameters = vsag::JsonType::Parse(R"(
+        {
+            "dtype": "binary",
+            "metric_type": "hamming",
+            "dim": 16,
+            "hnsw": {
+                "max_degree": 8,
+                "ef_construction": 100
+            }
+        }
+        )");
+
+        for (const auto* index_name : {"fresh_hnsw", "brute_force", "diskann"}) {
+            auto index = vsag::Factory::CreateIndex(index_name, parameters.Dump());
+            REQUIRE_FALSE(index.has_value());
+            REQUIRE(index.error().type == vsag::ErrorType::UNSUPPORTED_INDEX_OPERATION);
+        }
     }
 }
 

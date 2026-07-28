@@ -206,3 +206,6 @@ wheelhouse/
 
 # claude-code
 .claude/
+
+# Binary/Hamming end-to-end build
+/build-e2e/

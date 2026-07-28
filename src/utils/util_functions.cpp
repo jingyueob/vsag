@@ -236,6 +236,9 @@ get_vectors(DataTypes type,
     } else if (type == DataTypes::DATA_TYPE_INT8) {
         *vectors_ptr = (void*)base->GetInt8Vectors();
         *data_size_ptr = dim * sizeof(int8_t);
+    } else if (type == DataTypes::DATA_TYPE_BINARY) {
+        *vectors_ptr = (void*)base->GetBinaryVectors();
+        *data_size_ptr = static_cast<uint64_t>(dim) / 8;
     } else if (type == DataTypes::DATA_TYPE_FP16 || type == DataTypes::DATA_TYPE_BF16) {
         *vectors_ptr = (void*)base->GetFloat16Vectors();
         *data_size_ptr = dim * sizeof(uint16_t);
@@ -255,6 +258,11 @@ set_dataset(DataTypes type,
         base->Float32Vectors((float*)vectors_ptr)->Dim(dim)->Owner(false)->NumElements(num_element);
     } else if (type == DataTypes::DATA_TYPE_INT8) {
         base->Int8Vectors((int8_t*)vectors_ptr)->Dim(dim)->Owner(false)->NumElements(num_element);
+    } else if (type == DataTypes::DATA_TYPE_BINARY) {
+        base->BinaryVectors((uint8_t*)vectors_ptr)
+            ->Dim(dim)
+            ->Owner(false)
+            ->NumElements(num_element);
     } else if (type == DataTypes::DATA_TYPE_FP16 || type == DataTypes::DATA_TYPE_BF16) {
         base->Float16Vectors((uint16_t*)vectors_ptr)
             ->Dim(dim)

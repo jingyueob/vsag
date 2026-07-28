@@ -27,6 +27,16 @@ HnswParameters::FromJson(const JsonType& hnsw_param_obj,
                          const IndexCommonParam& index_common_param) {
     HnswParameters obj;
 
+    if (index_common_param.data_type_ == DataTypes::DATA_TYPE_BINARY) {
+        CHECK_ARGUMENT(index_common_param.dim_ > 0 && index_common_param.dim_ % 8 == 0,
+                       "binary dimension must be a positive multiple of 8");
+        CHECK_ARGUMENT(index_common_param.metric_ == MetricType::METRIC_TYPE_HAMMING,
+                       "binary dtype must use hamming");
+    } else {
+        CHECK_ARGUMENT(index_common_param.metric_ != MetricType::METRIC_TYPE_HAMMING,
+                       "hamming metric must use binary dtype");
+    }
+
     if (index_common_param.data_type_ == DataTypes::DATA_TYPE_FLOAT) {
         obj.type = DataTypes::DATA_TYPE_FLOAT;
     } else if (index_common_param.data_type_ == DataTypes::DATA_TYPE_INT8) {
@@ -37,6 +47,8 @@ HnswParameters::FromJson(const JsonType& hnsw_param_obj,
                 fmt::format(
                     "no support for INT8 when using {}, {} as metric", METRIC_L2, METRIC_COSINE));
         }
+    } else if (index_common_param.data_type_ == DataTypes::DATA_TYPE_BINARY) {
+        obj.type = DataTypes::DATA_TYPE_BINARY;
     }
 
     if (index_common_param.metric_ == MetricType::METRIC_TYPE_L2SQR) {
@@ -46,6 +58,10 @@ HnswParameters::FromJson(const JsonType& hnsw_param_obj,
     } else if (index_common_param.metric_ == MetricType::METRIC_TYPE_COSINE) {
         obj.normalize = true;
         obj.space = std::make_shared<hnswlib::InnerProductSpace>(index_common_param.dim_, obj.type);
+    } else if (index_common_param.metric_ == MetricType::METRIC_TYPE_HAMMING) {
+        obj.space =
+            std::make_shared<hnswlib::HammingSpace>(static_cast<uint64_t>(index_common_param.dim_) /
+                                                   8);
     }
 
     // set obj.max_degree

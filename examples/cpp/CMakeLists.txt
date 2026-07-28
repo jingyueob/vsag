@@ -17,6 +17,18 @@
 add_executable(101_index_hnsw 101_index_hnsw.cpp)
 target_link_libraries(101_index_hnsw vsag)
 
+if (ENABLE_BINARY_HAMMING_E2E AND TARGET hdf5)
+    add_executable (113_index_binary_hamming_hnsw 113_index_binary_hamming_hnsw.cpp)
+    target_link_libraries (113_index_binary_hamming_hnsw
+        vsag
+        vsag_hdf5_headers
+        ${HDF5_CPP_STATIC_LIBRARY}
+        ${HDF5_C_STATIC_LIBRARY}
+        z
+        dl)
+    add_dependencies (113_index_binary_hamming_hnsw hdf5)
+endif ()
+
 add_executable(102_index_diskann 102_index_diskann.cpp)
 target_link_libraries(102_index_diskann vsag_static)
 

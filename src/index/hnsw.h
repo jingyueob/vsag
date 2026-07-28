@@ -209,6 +209,14 @@ public:
         SAFE_CALL(return this->calc_distance_by_id(vector, id));
     };
 
+    virtual tl::expected<float, Error>
+    CalcDistanceById(const DatasetPtr& vector,
+                     int64_t id,
+                     bool calculate_precise_distance = true) const override {
+        (void)calculate_precise_distance;
+        SAFE_CALL(return this->calc_distance_by_id(vector, id));
+    };
+
     virtual tl::expected<DatasetPtr, Error>
     CalDistanceById(const float* vector,
                     const int64_t* ids,
@@ -427,7 +435,10 @@ private:
     merge(const std::vector<MergeUnit>& merge_units);
 
     tl::expected<float, Error>
-    calc_distance_by_id(const float* vector, int64_t id) const;
+    calc_distance_by_id(const void* vector, int64_t id) const;
+
+    tl::expected<float, Error>
+    calc_distance_by_id(const DatasetPtr& vector, int64_t id) const;
 
     tl::expected<DatasetPtr, Error>
     calc_distance_by_id(const float* vector, const int64_t* ids, int64_t count) const;

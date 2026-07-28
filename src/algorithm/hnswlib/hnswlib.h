@@ -39,5 +39,6 @@
 #endif
 
 #include "hnswalg.h"
+#include "space_hamming.h"
 #include "space_ip.h"
 #include "space_l2.h"

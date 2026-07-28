@@ -21,6 +21,23 @@
 namespace vsag::generic {
 
 float
+Hamming(const void* query1, const void* query2, const void* byte_count) {
+    const auto* lhs = static_cast<const uint8_t*>(query1);
+    const auto* rhs = static_cast<const uint8_t*>(query2);
+    const uint64_t bytes = *static_cast<const uint64_t*>(byte_count);
+    uint64_t distance = 0;
+
+    for (uint64_t i = 0; i < bytes; ++i) {
+        uint8_t value = lhs[i] ^ rhs[i];
+        while (value != 0) {
+            value &= static_cast<uint8_t>(value - 1);
+            ++distance;
+        }
+    }
+    return static_cast<float>(distance);
+}
+
+float
 L2Sqr(const void* pVect1v, const void* pVect2v, const void* qty_ptr) {
     auto* pVect1 = (float*)pVect1v;
     auto* pVect2 = (float*)pVect2v;

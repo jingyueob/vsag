@@ -61,9 +61,12 @@ DatasetPtr DeepCopy(Allocator* allocator = nullptr) const;  // 独立副本
 | `Float32Vectors(const float*)` | `GetFloat32Vectors()` | `float` | `dtype: float32` |
 | `Float16Vectors(const uint16_t*)` | `GetFloat16Vectors()` | `uint16_t` | `dtype: float16` **及** `bfloat16`（原始 16 位负载） |
 | `Int8Vectors(const int8_t*)` | `GetInt8Vectors()` | `int8_t` | `dtype: int8` |
+| `BinaryVectors(const uint8_t*)` | `GetBinaryVectors()` | `uint8_t` | HNSW 的 `dtype: binary` 与 Hamming 距离 |
 | `SparseVectors(const SparseVector*)` | `GetSparseVectors()` | [`SparseVector`](#sparsevector) | `dtype: sparse`（SINDI） |
 
 稠密向量按行主序排列：元素 `i` 的维度 `j` 位于 `vectors[i * dim + j]`。
+对于 binary 向量，`dim` 表示逻辑 bit 数，每行占用 `dim / 8` 个 packed bytes；调用方负责
+将 bit 压缩到 `uint8_t` buffer 中。
 
 ### 多向量负载
 
