@@ -8,6 +8,7 @@ VSAG 提供了一系列索引实现，它们共享同一套构建式 API、同�
 
 | 索引 | 文档 | 适用场景 |
 |------|------|---------|
+| `hnsw` | [HNSW](hnsw.md) | 支持 L2、内积、余弦、Hamming，以及 float32 L1 距离的图索引 |
 | `hgraph` | [HGraph](hgraph.md) | 通用高召回图索引，量化选项丰富 |
 | `lazy_hgraph` | [LazyHGraph](lazy_hgraph.md) | 从小规模精确检索开始、后续自动转换为 HGraph 的 FP32 集合 |
 | `ivf` | [IVF](ivf.md) | 基于分桶的检索，适合高吞吐批查询与超大规模语料 |
@@ -26,7 +27,7 @@ VSAG 提供了一系列索引实现，它们共享同一套构建式 API、同�
 |------|--------|------|
 | `dim` | 正整数 | 向量维度；构建后不可变 |
 | `dtype` | `float32` / `float16` / `bfloat16` / `int8` / `sparse` | `sparse` 仅 SINDI 使用 |
-| `metric_type` | `l2` / `ip` / `cosine` | 查询时必须保持一致（SINDI 仅支持 `ip`） |
+| `metric_type` | `l2` / `ip` / `cosine` / `hamming` / `l1` | 查询时必须保持一致；`hamming` 和 `l1` 的限制见 [HNSW](hnsw.md) |
 
 索引特有的构建参数放在 `index_param` 子对象中；查询参数放在以索引名命名的子对象中
 （例如 `hgraph`、`ivf`、`sindi`、`pyramid`）。LazyHGraph 转换到 graph 阶段后也使用

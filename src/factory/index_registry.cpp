@@ -82,6 +82,12 @@ create_registered_index(const std::string& index_name,
             Error(ErrorType::UNSUPPORTED_INDEX_OPERATION,
                   "binary dtype is supported only by the hnsw index"));
     }
+    if (index_common_params.metric_ == MetricType::METRIC_TYPE_L1 &&
+        normalized_name != INDEX_HNSW) {
+        return tl::unexpected(
+            Error(ErrorType::UNSUPPORTED_INDEX_OPERATION,
+                  "l1 metric is supported only by the hnsw index"));
+    }
     return creator(parsed_params, index_common_params);
 }
 

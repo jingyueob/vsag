@@ -27,6 +27,10 @@ HnswParameters::FromJson(const JsonType& hnsw_param_obj,
                          const IndexCommonParam& index_common_param) {
     HnswParameters obj;
 
+    CHECK_ARGUMENT(index_common_param.metric_ != MetricType::METRIC_TYPE_L1 ||
+                       index_common_param.data_type_ == DataTypes::DATA_TYPE_FLOAT,
+                   "l1 metric must use float32 dtype");
+
     if (index_common_param.data_type_ == DataTypes::DATA_TYPE_BINARY) {
         CHECK_ARGUMENT(index_common_param.dim_ > 0 && index_common_param.dim_ % 8 == 0,
                        "binary dimension must be a positive multiple of 8");
@@ -62,6 +66,8 @@ HnswParameters::FromJson(const JsonType& hnsw_param_obj,
         obj.space =
             std::make_shared<hnswlib::HammingSpace>(static_cast<uint64_t>(index_common_param.dim_) /
                                                    8);
+    } else if (index_common_param.metric_ == MetricType::METRIC_TYPE_L1) {
+        obj.space = std::make_shared<hnswlib::L1Space>(index_common_param.dim_);
     }
 
     // set obj.max_degree

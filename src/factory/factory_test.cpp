@@ -24,7 +24,7 @@
 #include "unittest.h"
 #include "vsag/errors.h"
 
-TEST_CASE("Create Index with Full Parameters", "[ut][factory][binary][hamming]") {
+TEST_CASE("Create Index with Full Parameters", "[ut][factory]") {
     vsag::logger::set_level(vsag::logger::level::debug);
 
     SECTION("hnsw") {
@@ -62,6 +62,10 @@ TEST_CASE("Create Index with Full Parameters", "[ut][factory][binary][hamming]")
         auto index = vsag::Factory::CreateIndex("diskann", parameters.Dump());
         REQUIRE(index.has_value());
     }
+}
+
+TEST_CASE("Create Binary Hamming Index", "[ut][factory][binary][hamming]") {
+    vsag::logger::set_level(vsag::logger::level::debug);
 
     SECTION("binary hamming hnsw") {
         auto parameters = vsag::JsonType::Parse(R"(
@@ -93,7 +97,35 @@ TEST_CASE("Create Index with Full Parameters", "[ut][factory][binary][hamming]")
         }
         )");
 
-        for (const auto* index_name : {"fresh_hnsw", "brute_force", "diskann"}) {
+        const char* unsupported_indexes[] = {"fresh_hnsw", "brute_force", "diskann"};
+        for (const auto* index_name : unsupported_indexes) {
+            auto index = vsag::Factory::CreateIndex(index_name, parameters.Dump());
+            REQUIRE_FALSE(index.has_value());
+            REQUIRE(index.error().type == vsag::ErrorType::UNSUPPORTED_INDEX_OPERATION);
+        }
+    }
+}
+
+TEST_CASE("Create Float32 L1 Index", "[ut][factory][l1]") {
+    vsag::logger::set_level(vsag::logger::level::debug);
+
+    SECTION("float32 l1 is restricted to hnsw") {
+        auto parameters = vsag::JsonType::Parse(R"(
+        {
+            "dtype": "float32",
+            "metric_type": "l1",
+            "dim": 16,
+            "hnsw": {
+                "max_degree": 8,
+                "ef_construction": 100
+            }
+        }
+        )");
+
+        REQUIRE(vsag::Factory::CreateIndex("hnsw", parameters.Dump()).has_value());
+        const char* unsupported_indexes[] = {
+            "fresh_hnsw", "brute_force", "diskann", "hgraph", "ivf"};
+        for (const auto* index_name : unsupported_indexes) {
             auto index = vsag::Factory::CreateIndex(index_name, parameters.Dump());
             REQUIRE_FALSE(index.has_value());
             REQUIRE(index.error().type == vsag::ErrorType::UNSUPPORTED_INDEX_OPERATION);

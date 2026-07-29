@@ -62,6 +62,7 @@ const char* const METRIC_L2 = "l2";
 const char* const METRIC_COSINE = "cosine";
 const char* const METRIC_IP = "ip";
 const char* const METRIC_HAMMING = "hamming";
+const char* const METRIC_L1 = "l1";
 const char* const DATATYPE_FLOAT32 = "float32";
 const char* const DATATYPE_FLOAT16 = "float16";
 const char* const DATATYPE_BFLOAT16 = "bfloat16";

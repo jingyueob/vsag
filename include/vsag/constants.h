@@ -60,6 +60,7 @@ extern const char* const METRIC_L2;
 extern const char* const METRIC_COSINE;
 extern const char* const METRIC_IP;
 extern const char* const METRIC_HAMMING;
+extern const char* const METRIC_L1;
 extern const char* const DATATYPE_FLOAT32;
 extern const char* const DATATYPE_FLOAT16;
 extern const char* const DATATYPE_BFLOAT16;

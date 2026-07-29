@@ -16,7 +16,8 @@
 #include "factory/resource_owner_wrapper.h"
 #include "index_common_param.h"
 #include "unittest.h"
-TEST_CASE("IndexCommonParam Basic Test", "[ut][IndexCommonParam][binary][hamming]") {
+
+TEST_CASE("IndexCommonParam Basic Test", "[ut][IndexCommonParam]") {
     std::shared_ptr<vsag::Resource> resource =
         std::make_shared<vsag::ResourceOwnerWrapper>(new vsag::Resource(), true);
     SECTION("wrong metric type") {
@@ -71,6 +72,12 @@ TEST_CASE("IndexCommonParam Basic Test", "[ut][IndexCommonParam][binary][hamming
         REQUIRE(param.extra_info_size_ == 38);
         REQUIRE(param.data_type_ == vsag::DataTypes::DATA_TYPE_FLOAT);
     }
+}
+
+TEST_CASE("IndexCommonParam Binary Hamming Test",
+          "[ut][IndexCommonParam][binary][hamming]") {
+    auto resource =
+        std::make_shared<vsag::ResourceOwnerWrapper>(new vsag::Resource(), true);
 
     SECTION("binary hamming success") {
         auto build_parameter_json = R"(
@@ -121,5 +128,75 @@ TEST_CASE("IndexCommonParam Basic Test", "[ut][IndexCommonParam][binary][hamming
         )";
         auto parsed_params = vsag::JsonType::Parse(build_parameter_json);
         REQUIRE_THROWS(vsag::IndexCommonParam::CheckAndCreate(parsed_params, resource));
+    }
+}
+
+TEST_CASE("IndexCommonParam L1 Test", "[ut][IndexCommonParam][l1]") {
+    auto resource =
+        std::make_shared<vsag::ResourceOwnerWrapper>(new vsag::Resource(), true);
+
+    SECTION("float32 l1 succeeds") {
+        auto params = vsag::JsonType::Parse(R"({
+            "metric_type": "l1",
+            "dtype": "float32",
+            "dim": 5
+        })");
+        auto common = vsag::IndexCommonParam::CheckAndCreate(params, resource);
+        REQUIRE(common.metric_ == vsag::MetricType::METRIC_TYPE_L1);
+        REQUIRE(common.data_type_ == vsag::DataTypes::DATA_TYPE_FLOAT);
+        REQUIRE(common.dim_ == 5);
+    }
+
+    SECTION("l1 rejects non-float32 dtype") {
+        const char* invalid_params[] = {
+            R"({
+                "metric_type": "l1",
+                "dtype": "int8",
+                "dim": 8
+            })",
+            R"({
+                "metric_type": "l1",
+                "dtype": "fp16",
+                "dim": 8
+            })",
+            R"({
+                "metric_type": "l1",
+                "dtype": "bf16",
+                "dim": 8
+            })",
+            R"({
+                "metric_type": "l1",
+                "dtype": "sparse",
+                "dim": 8
+            })",
+            R"({
+                "metric_type": "l1",
+                "dtype": "binary",
+                "dim": 8
+            })",
+        };
+        for (const auto* param_str : invalid_params) {
+            auto params = vsag::JsonType::Parse(param_str);
+            REQUIRE_THROWS(vsag::IndexCommonParam::CheckAndCreate(params, resource));
+        }
+    }
+
+    SECTION("aliases are rejected") {
+        const char* invalid_params[] = {
+            R"({
+                "metric_type": "manhattan",
+                "dtype": "float32",
+                "dim": 5
+            })",
+            R"({
+                "metric_type": "L1",
+                "dtype": "float32",
+                "dim": 5
+            })",
+        };
+        for (const auto* param_str : invalid_params) {
+            auto params = vsag::JsonType::Parse(param_str);
+            REQUIRE_THROWS(vsag::IndexCommonParam::CheckAndCreate(params, resource));
+        }
     }
 }

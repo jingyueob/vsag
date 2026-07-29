@@ -44,7 +44,7 @@ include (extern/thread_pool/thread_pool.cmake)
 include (extern/tsl/tsl.cmake)
 include (extern/roaringbitmap/roaringbitmap.cmake)
 
-if ((ENABLE_TOOLS OR ENABLE_BINARY_HAMMING_E2E) AND ENABLE_CXX11_ABI)
+if ((ENABLE_TOOLS OR ENABLE_BINARY_HAMMING_E2E OR ENABLE_L1_E2E) AND ENABLE_CXX11_ABI)
     include (extern/hdf5/hdf5.cmake)
 endif ()
 

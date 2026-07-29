@@ -15,8 +15,6 @@
 
 #include "basic_func.h"
 
-#include <array>
-
 #include <catch2/benchmark/catch_benchmark.hpp>
 
 #include "simd_status.h"
@@ -88,22 +86,32 @@ TEST_CASE("Generic Hamming Compute", "[ut][simd][hamming]") {
     uint64_t byte_count = 2;
 
     SECTION("known distance") {
-        std::array<uint8_t, 2> lhs{0x00, 0x00};
-        std::array<uint8_t, 2> rhs{0x03, 0x0f};
-        REQUIRE(generic::Hamming(lhs.data(), rhs.data(), &byte_count) == 6.0F);
-        REQUIRE(Hamming(lhs.data(), rhs.data(), &byte_count) == 6.0F);
+        uint8_t lhs[2]{0x00, 0x00};
+        uint8_t rhs[2]{0x03, 0x0f};
+        REQUIRE(generic::Hamming(lhs, rhs, &byte_count) == 6.0F);
+        REQUIRE(Hamming(lhs, rhs, &byte_count) == 6.0F);
     }
 
     SECTION("equal vectors") {
-        std::array<uint8_t, 2> lhs{0x5a, 0xa5};
-        REQUIRE(generic::Hamming(lhs.data(), lhs.data(), &byte_count) == 0.0F);
+        uint8_t lhs[2]{0x5a, 0xa5};
+        REQUIRE(generic::Hamming(lhs, lhs, &byte_count) == 0.0F);
     }
 
     SECTION("all bits differ") {
-        std::array<uint8_t, 2> lhs{0x00, 0x00};
-        std::array<uint8_t, 2> rhs{0xff, 0xff};
-        REQUIRE(generic::Hamming(lhs.data(), rhs.data(), &byte_count) == 16.0F);
+        uint8_t lhs[2]{0x00, 0x00};
+        uint8_t rhs[2]{0xff, 0xff};
+        REQUIRE(generic::Hamming(lhs, rhs, &byte_count) == 16.0F);
     }
+}
+
+TEST_CASE("Generic L1 Distance", "[ut][simd][l1]") {
+    constexpr uint64_t dim = 5;
+    const float lhs[dim]{-1.0F, 2.5F, 4.0F, 0.0F, -2.0F};
+    const float rhs[dim]{2.0F, -0.5F, 1.0F, 0.25F, 3.0F};
+
+    REQUIRE(generic::L1Distance(lhs, rhs, &dim) == 14.25F);
+    REQUIRE(L1Distance(lhs, rhs, &dim) == 14.25F);
+    REQUIRE(generic::L1Distance(lhs, lhs, &dim) == 0.0F);
 }
 
 TEST_CASE("PQ Calculation", "[ut][simd]") {

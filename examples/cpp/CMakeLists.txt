@@ -29,6 +29,18 @@ if (ENABLE_BINARY_HAMMING_E2E AND TARGET hdf5)
     add_dependencies (113_index_binary_hamming_hnsw hdf5)
 endif ()
 
+if (ENABLE_L1_E2E AND TARGET hdf5)
+    add_executable (114_index_float32_l1_hnsw 114_index_float32_l1_hnsw.cpp)
+    target_link_libraries (114_index_float32_l1_hnsw
+        vsag
+        vsag_hdf5_headers
+        ${HDF5_CPP_STATIC_LIBRARY}
+        ${HDF5_C_STATIC_LIBRARY}
+        z
+        dl)
+    add_dependencies (114_index_float32_l1_hnsw hdf5)
+endif ()
+
 add_executable(102_index_diskann 102_index_diskann.cpp)
 target_link_libraries(102_index_diskann vsag_static)
 

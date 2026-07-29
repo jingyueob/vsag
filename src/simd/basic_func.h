@@ -52,6 +52,9 @@ DECLARE_BASIC_FUNCTIONS(sve)
 namespace generic {
 float
 Hamming(const void* query1, const void* query2, const void* byte_count);
+
+float
+L1Distance(const void* query1, const void* query2, const void* dim);
 }
 
 using DistanceFuncType = float (*)(const void* query1, const void* query2, const void* qty_ptr);
@@ -62,6 +65,7 @@ extern DistanceFuncType INT8L2Sqr;
 extern DistanceFuncType INT8InnerProduct;
 extern DistanceFuncType INT8InnerProductDistance;
 extern DistanceFuncType Hamming;
+extern DistanceFuncType L1Distance;
 
 using PQDistanceFuncType = void (*)(const void* single_dim_centers,
                                     float single_dim_val,

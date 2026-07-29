@@ -26,6 +26,7 @@ VSAG_DEFINE_SIMD_DISPATCH(INT8InnerProduct, DistanceFuncType);
 VSAG_DEFINE_SIMD_DISPATCH(INT8L2Sqr, DistanceFuncType);
 VSAG_DEFINE_SIMD_DISPATCH(INT8InnerProductDistance, DistanceFuncType);
 DistanceFuncType Hamming = generic::Hamming;
+DistanceFuncType L1Distance = generic::L1Distance;
 VSAG_DEFINE_SIMD_DISPATCH(PQDistanceFloat256, PQDistanceFuncType);
 VSAG_DEFINE_SIMD_DISPATCH_PREFETCH(Prefetch, PrefetchFuncType);
 

@@ -15,7 +15,6 @@
 
 #include "util_functions.h"
 
-#include <array>
 #include <cmath>
 #include <sstream>
 #include <unordered_map>
@@ -109,19 +108,18 @@ TEST_CASE("UtilFunctions Basic", "[ut][UtilFunctions]") {
 
 TEST_CASE("UtilFunctions Binary Vectors", "[ut][UtilFunctions][binary]") {
     constexpr int64_t dim = 16;
-    std::array<uint8_t, 2> bytes{0x12, 0x34};
-    auto source =
-        Dataset::Make()->Dim(dim)->NumElements(1)->BinaryVectors(bytes.data())->Owner(false);
+    uint8_t bytes[2]{0x12, 0x34};
+    auto source = Dataset::Make()->Dim(dim)->NumElements(1)->BinaryVectors(bytes)->Owner(false);
 
     void* vectors = nullptr;
     uint64_t data_size = 0;
     get_vectors(DataTypes::DATA_TYPE_BINARY, dim, source, &vectors, &data_size);
-    REQUIRE(vectors == bytes.data());
+    REQUIRE(vectors == bytes);
     REQUIRE(data_size == 2);
 
     auto destination = Dataset::Make();
     set_dataset(DataTypes::DATA_TYPE_BINARY, dim, destination, vectors, 1);
-    REQUIRE(destination->GetBinaryVectors() == bytes.data());
+    REQUIRE(destination->GetBinaryVectors() == bytes);
     REQUIRE(destination->GetDim() == dim);
     REQUIRE(destination->GetNumElements() == 1);
 }
