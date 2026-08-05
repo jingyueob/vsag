@@ -19,6 +19,8 @@
 
 namespace vsag {
 
+DistanceFuncType L1Distance = generic::L1Distance;
+
 static DistanceFuncType
 GetL2Sqr() {
     if (SimdStatus::SupportAVX512()) {
